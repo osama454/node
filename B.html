@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Playback Example</title>
+</head>
+<body>
+  <button id="playAudio">Play Audio</button>
+
+  <script>
+    document.getElementById("playAudio").addEventListener("click", async () => {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // Ensure compatibility across browsers
+
+      try {
+        const response = await fetch("audio.mp3");
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+        // Cut (play from second 2 to 5)
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0, 2, 3); // start at 0 seconds, offset 2 seconds, play for 3 seconds
+      } catch (error) {
+        console.error("Error with decoding audio data", error);
+      }
+    });
+  </script>
+</body>
+</html>
