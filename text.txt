@@ -1,0 +1,33 @@
+I'm trying to extract and process large amounts of data from various CSV files asynchronously, transform this data, and then write it to a database. I heard streams are efficient for this. Here's my attempt using the fs and csv-parser modules in Node.js:
+
+const fs = require('fs');
+const csv = require('csv-parser');
+
+async function processCSVs(files) {
+    files.forEach(file => {
+        fs.createReadStream(file)
+            .pipe(csv())
+            .on('data', (row) => {
+                // Processing data and writing to a database
+            })
+            .on('end', () => {
+                console.log(`Done with ${file}`);
+            });
+    });
+}
+
+This seems to work, but I'm running into memory issues when processing multiple large files. Can you suggest a solution?
+
+
+Test case 1: Verify that the solution handles processing multiple CSV files asynchronously.  
+Test case 2: Ensure the solution uses streams to efficiently read large CSV files.  
+Test case 3: Check if the data is processed and written to the database as intended.  
+Test case 4: Verify that memory issues are addressed, especially when processing multiple large files concurrently.  
+Test case 5: Ensure that the end of processing for each file is logged appropriately with the filename.
+
+
+Test case 1: Passed
+Test case 2: Passed
+Test case 3: Passed
+Test case 4: Passed
+Test case 5: Passed

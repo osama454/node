@@ -1,25 +1,42 @@
-const express = require('express');
-const { graphqlHTTP } = require('express-graphql');
-const { buildSchema } = require('graphql');
+const fs = require('fs');
+const csv = require('csv-parser');
 
-// Define the schema
-const schema = buildSchema(`
-  type Query {
-    hello: String
-  }
-`);
+async function processCSVs(files, batchSize = 1000) {
+    for (const file of files) { 
+        await new Promise((resolve, reject) => {
+            let batch = [];
+            fs.createReadStream(file)
+                .pipe(csv())
+                .on('data', async (row) => {
+                    batch.push(row);
+                    if (batch.length >= batchSize) {
+                        try {
+                            await writeToDatabase(batch);
+                            batch = [];
+                        } catch (error) {
+                            console.error("Error writing to database:", error);
+                            reject(error);
+                        }
+                    }
+                })
+                .on('end', async () => {
+                    if (batch.length > 0) {
+                        try {
+                            await writeToDatabase(batch);
+                        } catch (error) {
+                            console.error("Error writing to database:", error);
+                            reject(error);
+                        }
+                    }
+                    console.log(`Done with ${file}`);
+                    resolve();
+                })
+                .on('error', reject); 
+        });
+    }
+}
 
-// Define the root resolver
-const root = {
-  hello: () => 'Hello, GraphQL!',
-};
-
-// Set up Express server
-const app = express();
-app.use('/graphql', graphqlHTTP({
-  schema: schema,
-  rootValue: root,
-  graphiql: true, // Enables the GraphiQL UI for testing queries
-}));
-
-app.listen(4000, () => console.log('GraphQL server running on http://localhost:4000/graphql'));
+async function writeToDatabase(rows) {
+    // Your database write logic for batch inserts
+    // ...
+}
