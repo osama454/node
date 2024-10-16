@@ -1,0 +1,22 @@
+Test case 1: Include the entire code in the response without leaving out portions.  
+Test case 2: Do not instruct the user to write any part of the code themselves.  
+Test case 3: If there's any part of the code to be provided by the user, write dummy code and offer a placeholder with a clarifying comment like "replace with actual code."  
+Test case 4: The main code block should be fully functional and complete.  
+Test case 5: You can use comments to explain specific sections, but only when you are explaining certain parts of the code.  
+Test case 6: Ensure the algorithm divides the 16-bit key space among MPI processes.  
+Test case 7: Each process should brute-force its assigned key space and check if the correct key produces the given ciphertext from the plaintext.  
+Test case 8: If a process finds the correct key, it should notify all other processes to terminate.  
+Test case 9: The code should implement efficient communication using MPI_Bcast or MPI_Send/MPI_Recv to stop all processes.  
+Test case 10: The code should clean up the MPI environment with MPI_Finalize.
+
+Test case 1: Passed
+Test case 2: Passed
+Test case 3: Passed
+Test case 4: Passed
+Test case 5: Passed
+Test case 6: Passed
+Test case 7: Passed
+Test case 8: Passed
+Test case 9: Passed
+Test case 10: Passed
+
