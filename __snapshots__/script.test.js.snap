@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generateFieldControl label 1`] = `"hello"`;
+
+exports[`label label 1`] = `"hello"`;
