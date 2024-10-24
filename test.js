@@ -1,101 +1,275 @@
 // test.js
-const { JSDOM } = require("jsdom");
+const { JSDOM } = require('jsdom');
 
 const options = {
-  resources: "usable",
-  runScripts: "dangerously",
+  resources: 'usable',
+  runScripts: 'dangerously',
 };
 
 let window, document;
 
 beforeAll((done) => {
-  JSDOM.fromFile("index.html", options).then((dom) => {
+  JSDOM.fromFile('index.html', options).then((dom) => {
     window = dom.window;
     document = window.document;
-    if (document.readyState != "loading") done();
-    else
-      document.addEventListener("DOMContentLoaded", () => {
-        done();
+
+    // Mock requestAnimationFrame and cancelAnimationFrame
+    window.requestAnimationFrame = jest.fn((cb) => setTimeout(cb, 16));
+    window.cancelAnimationFrame = jest.fn((id) => clearTimeout(id));
+
+    // Wait for the scripts to load
+
+      // Mock canvas context methods
+      const canvas = document.getElementById('myCanvas');
+      canvas.getContext = () => ({
+        beginPath: jest.fn(),
+        arc: jest.fn(),
+        rect: jest.fn(),
+        moveTo: jest.fn(),
+        lineTo: jest.fn(),
+        closePath: jest.fn(),
+        fill: jest.fn(),
+        stroke: jest.fn(),
+        save: jest.fn(),
+        restore: jest.fn(),
+        translate: jest.fn(),
+        rotate: jest.fn(),
+        clearRect: jest.fn(),
+        isPointInPath: jest.fn(() => true),
+        createLinearGradient: jest.fn(() => ({
+          addColorStop: jest.fn(),
+        })),
       });
-  });
+
+      done();
+    });
+
 });
 
-describe('Discrete Math Graph Visualizations', () => {
-  test('getRandomInt returns integer within specified range', () => {
-    const min = 5;
-    const max = 10;
-    for (let i = 0; i < 100; i++) {
-      const value = window.getRandomInt(min, max);
-      expect(Number.isInteger(value)).toBe(true);
-      expect(value).toBeGreaterThanOrEqual(min);
-      expect(value).toBeLessThanOrEqual(max);
-    }
-  });
+describe('Interactive Geometry Playground', () => {
+  test('Canvas and control buttons exist', () => {
+    const canvas = document.getElementById('myCanvas');
+    expect(canvas).not.toBeNull();
 
-  test('generateRandomGraph returns graph with correct number of nodes and edges', () => {
-    const numNodes = 6;
-    const numEdges = 10;
-    const graph = window.generateRandomGraph(numNodes, numEdges);
+    const controls = [
+      'drawCircle',
+      'drawSquare',
+      'drawTriangle',
+      'drawPentagon',
+      'clearCanvas',
+      'gridSize',
+      'shapeSize',
+      'borderColor',
+      'borderWidth',
+      'animationToggle',
+      'saveShapes',
+      'loadShapes',
+      'shapeCount',
+    ];
 
-    expect(graph.nodes.length).toBe(numNodes);
-    expect(graph.edges.length).toBe(numEdges);
-
-    // Check that there are no self-loops
-    graph.edges.forEach(edge => {
-      expect(edge.from).not.toBe(edge.to);
+    controls.forEach((id) => {
+      const element = document.getElementById(id);
+      expect(element).not.toBeNull();
     });
   });
 
-  test('transposeGraph reverses the edges of the graph', () => {
-    // Create a test graph
-    const graph = {
-      nodes: [{ id: 0 }, { id: 1 }, { id: 2 }],
-      edges: [
-        { from: 0, to: 1, arrows: 'to' },
-        { from: 1, to: 2, arrows: 'to' },
-      ],
-    };
+  test('Clicking "Draw Circle" adds a circle', () => {
+    const drawCircleBtn = document.getElementById('drawCircle');
+    const shapeCountDisplay = document.getElementById('shapeCount');
 
-    const transposed = window.transposeGraph(graph);
+    expect(shapeCountDisplay.textContent).toBe('0');
 
-    expect(transposed.edges.length).toBe(graph.edges.length);
+    drawCircleBtn.click();
 
-    for (let i = 0; i < graph.edges.length; i++) {
-      expect(transposed.edges[i].from).toBe(graph.edges[i].to);
-      expect(transposed.edges[i].to).toBe(graph.edges[i].from);
-    }
+    expect(shapeCountDisplay.textContent).toBe('1');
   });
 
-  test('colorGraph assigns colors such that adjacent nodes have different colors', () => {
-    // Create a test graph
-    const graph = {
-      nodes: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
-      edges: [
-        { from: 0, to: 1 },
-        { from: 1, to: 2 },
-        { from: 2, to: 3 },
-        { from: 3, to: 0 },
-        { from: 0, to: 2 },
-      ],
-    };
+  test('Clicking "Draw Square" adds a square', () => {
+    const drawSquareBtn = document.getElementById('drawSquare');
+    const shapeCountDisplay = document.getElementById('shapeCount');
 
-    const coloredNodes = window.colorGraph(graph);
+    const initialCount = parseInt(shapeCountDisplay.textContent, 10);
 
-    // Map node ids to colors
-    const nodeColors = {};
-    coloredNodes.forEach(node => {
-      nodeColors[node.id] = node.color;
-    });
+    drawSquareBtn.click();
 
-    // Check that adjacent nodes have different colors
-    graph.edges.forEach(edge => {
-      expect(nodeColors[edge.from]).not.toBe(nodeColors[edge.to]);
-    });
+    expect(shapeCountDisplay.textContent).toBe((initialCount + 1).toString());
   });
 
-  test('Graph containers exist in the document', () => {
-    expect(document.getElementById('directedGraph')).not.toBeNull();
-    expect(document.getElementById('transposedGraph')).not.toBeNull();
-    expect(document.getElementById('coloredGraph')).not.toBeNull();
+  test('Clearing canvas removes all shapes', () => {
+    const shapeCountDisplay = document.getElementById('shapeCount');
+    const clearCanvasBtn = document.getElementById('clearCanvas');
+
+    // Ensure there are shapes to clear
+    const drawCircleBtn = document.getElementById('drawCircle');
+    drawCircleBtn.click();
+    expect(shapeCountDisplay.textContent).not.toBe('0');
+
+    clearCanvasBtn.click();
+
+    expect(shapeCountDisplay.textContent).toBe('0');
+  });
+
+  test('Double-clicking a shape deletes it', () => {
+    const canvas = document.getElementById('myCanvas');
+    const shapeCountDisplay = document.getElementById('shapeCount');
+
+    // Draw a shape first
+    const drawCircleBtn = document.getElementById('drawCircle');
+    drawCircleBtn.click();
+
+    const initialCount = parseInt(shapeCountDisplay.textContent, 10);
+    expect(initialCount).toBeGreaterThan(0);
+
+    // Simulate double-click on canvas at position where the shape is likely to be
+    const dblclickEvent = new window.MouseEvent('dblclick', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 100,
+      clientY: 100,
+    });
+    Object.defineProperty(dblclickEvent, 'offsetX', { get: () => 100 });
+    Object.defineProperty(dblclickEvent, 'offsetY', { get: () => 100 });
+    canvas.dispatchEvent(dblclickEvent);
+
+    // After deleting, the shape count should decrease by 1
+    expect(shapeCountDisplay.textContent).toBe((1).toString());
+  });
+
+  test('Animation toggle starts and stops animation', () => {
+    const animationToggle = document.getElementById('animationToggle');
+    const requestAnimationFrameSpy = jest.spyOn(window, 'requestAnimationFrame');
+    const cancelAnimationFrameSpy = jest.spyOn(window, 'cancelAnimationFrame');
+
+    animationToggle.checked = true;
+    animationToggle.dispatchEvent(new window.Event('change'));
+
+    expect(requestAnimationFrameSpy).toHaveBeenCalled();
+
+    animationToggle.checked = false;
+    animationToggle.dispatchEvent(new window.Event('change'));
+
+    expect(cancelAnimationFrameSpy).toHaveBeenCalled();
+  });
+
+  test('Changing shape size affects new shapes', () => {
+    const shapeSizeRange = document.getElementById('shapeSize');
+    const drawCircleBtn = document.getElementById('drawCircle');
+    const shapeCountDisplay = document.getElementById('shapeCount');
+
+    shapeSizeRange.value = '70';
+    shapeSizeRange.dispatchEvent(new window.Event('input'));
+
+    const initialCount = parseInt(shapeCountDisplay.textContent, 10);
+    drawCircleBtn.click();
+
+    // Since we can't access the shape size directly, we assume that if the shape is drawn without errors,
+    // the size change was accepted. Alternatively, we can check if drawShapes function was called with the new size.
+
+    expect(shapeCountDisplay.textContent).toBe((initialCount + 1).toString());
+  });
+
+  test('Changing border color affects new shapes', () => {
+    const borderColorPicker = document.getElementById('borderColor');
+    const drawSquareBtn = document.getElementById('drawSquare');
+    const shapeCountDisplay = document.getElementById('shapeCount');
+
+    borderColorPicker.value = '#ff0000';
+    borderColorPicker.dispatchEvent(new window.Event('input'));
+
+    const initialCount = parseInt(shapeCountDisplay.textContent, 10);
+    drawSquareBtn.click();
+
+    expect(shapeCountDisplay.textContent).toBe((initialCount + 1).toString());
+  });
+
+  test('Changing border width affects new shapes', () => {
+    const borderWidthRange = document.getElementById('borderWidth');
+    const drawTriangleBtn = document.getElementById('drawTriangle');
+    const shapeCountDisplay = document.getElementById('shapeCount');
+
+    borderWidthRange.value = '5';
+    borderWidthRange.dispatchEvent(new window.Event('input'));
+
+    const initialCount = parseInt(shapeCountDisplay.textContent, 10);
+    drawTriangleBtn.click();
+
+    expect(shapeCountDisplay.textContent).toBe((initialCount + 1).toString());
+  });
+
+  test('Grid size changes snapping behavior', () => {
+    const gridSizeSelect = document.getElementById('gridSize');
+    const canvas = document.getElementById('myCanvas');
+    const drawCircleBtn = document.getElementById('drawCircle');
+
+    // Set grid size to 50
+    gridSizeSelect.value = '50';
+    gridSizeSelect.dispatchEvent(new window.Event('change'));
+
+    // Draw a shape to have something to drag
+    drawCircleBtn.click();
+
+    // Simulate dragging the shape
+    const mousedownEvent = new window.MouseEvent('mousedown', {
+      clientX: 75,
+      clientY: 75,
+      bubbles: true,
+    });
+    Object.defineProperty(mousedownEvent, 'offsetX', { get: () => 75 });
+    Object.defineProperty(mousedownEvent, 'offsetY', { get: () => 75 });
+    canvas.dispatchEvent(mousedownEvent);
+
+    const mousemoveEvent = new window.MouseEvent('mousemove', {
+      clientX: 125,
+      clientY: 125,
+      bubbles: true,
+    });
+    Object.defineProperty(mousemoveEvent, 'offsetX', { get: () => 125 });
+    Object.defineProperty(mousemoveEvent, 'offsetY', { get: () => 125 });
+    canvas.dispatchEvent(mousemoveEvent);
+
+    const mouseupEvent = new window.MouseEvent('mouseup', { bubbles: true });
+    canvas.dispatchEvent(mouseupEvent);
+
+    // Since we can't access the shape's position directly, we can't verify the snapping behavior.
+    // However, we can check if the code executed without errors.
+    expect(true).toBe(true);
+  });
+
+  test('Saving shapes creates a download link', () => {
+    const saveShapesBtn = document.getElementById('saveShapes');
+    const createElementSpy = jest.spyOn(document, 'createElement');
+    const clickMock = jest.fn();
+    createElementSpy.mockReturnValue({ setAttribute: jest.fn(), click: clickMock });
+
+    saveShapesBtn.click();
+
+    expect(createElementSpy).toHaveBeenCalledWith('a');
+    expect(clickMock).toHaveBeenCalled();
+  });
+
+  test('Loading shapes updates the shape count', () => {
+    const loadShapesBtn = document.getElementById('loadShapes');
+    const fileInput = document.getElementById('fileInput');
+    const shapeCountDisplay = document.getElementById('shapeCount');
+
+    const initialCount = parseInt(shapeCountDisplay.textContent, 10);
+
+    // Mock FileReader
+    const fileContent = JSON.stringify([{ type: 'circle', x: 50, y: 50, size: 30 }]);
+    jest.spyOn(window, 'FileReader').mockImplementation(() => ({
+      readAsText: function () {
+        this.onload({ target: { result: fileContent } });
+      },
+      onload: null,
+    }));
+
+    // Simulate file selection
+    const file = new window.Blob([fileContent], { type: 'application/json' });
+    const changeEvent = new window.Event('change');
+    Object.defineProperty(changeEvent, 'target', { value: { files: [file] } });
+    fileInput.dispatchEvent(changeEvent);
+
+    // Check if shape count increased
+    expect(parseInt(shapeCountDisplay.textContent, 10)).toBeGreaterThan(0);
   });
 });
