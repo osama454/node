@@ -21,89 +21,80 @@ beforeAll((done) => {
   });
 });
 
-describe("Company Findings Webpage", () => {
-  beforeEach(() => {
-    // Reset the data container before each test
-    document.getElementById("dataContainer").innerHTML = "";
+// Helper to simulate clicks
+const clickButton = (buttonId) => {
+  const button = document.getElementById(buttonId);
+  button.click();
+};
+
+describe("Company Findings App", () => {
+  test("Data buttons toggle the visibility of Data 1", () => {
+    const dataContainer = document.getElementById("dataContainer");
+    expect(dataContainer.innerHTML.trim()).toBe(""); // Initially no data
+    clickButton("data1Button");
+    expect(dataContainer.innerHTML).toContain("Index"); // Data 1 table appears
+    clickButton("data1Button");
+    expect(dataContainer.innerHTML).not.toContain("Index"); // Data 1 table disappears
   });
 
-  test("should toggle Data 1 display when clicking the Data 1 button", () => {
-    const data1Button = document.getElementById("data1Button");
+  test("Data buttons toggle the visibility of Data 2", () => {
     const dataContainer = document.getElementById("dataContainer");
-
-    // Trigger click event
-    data1Button.click();
-
-    // Check if data1 content is rendered
-    expect(dataContainer.innerHTML).not.toBe("");
-    expect(dataContainer.querySelector("table")).not.toBeNull();
+    clickButton("data2Button");
+    expect(dataContainer.innerHTML).toContain("Index"); // Data 2 table appears
+    clickButton("data2Button");
+    expect(dataContainer.innerHTML).not.toContain("Index"); // Data 2 table disappears
   });
 
-  test("should toggle Data 2 display when clicking the Data 2 button", () => {
-    const data2Button = document.getElementById("data2Button");
+  test("Data buttons toggle the visibility of Data 3", () => {
     const dataContainer = document.getElementById("dataContainer");
-
-    // Trigger click event
-    data2Button.click();
-
-    // Check if data2 content is rendered
-    expect(dataContainer.innerHTML).not.toBe("");
-    expect(dataContainer.querySelector("table")).not.toBeNull();
+    clickButton("data3Button");
+    expect(dataContainer.innerHTML).toContain("Index"); // Data 3 table appears
+    clickButton("data3Button");
+    expect(dataContainer.innerHTML).not.toContain("Index"); // Data 3 table disappears
   });
 
-  test("should toggle Data 3 display when clicking the Data 3 button", () => {
-    const data3Button = document.getElementById("data3Button");
+  test("Layout button changes layout from row to column", () => {
     const dataContainer = document.getElementById("dataContainer");
 
-    // Trigger click event
-    data3Button.click();
+    // Add some data to toggle
+    clickButton("data1Button");
 
-    // Check if data3 content is rendered
-    expect(dataContainer.innerHTML).not.toBe("");
-    expect(dataContainer.querySelector("table")).not.toBeNull();
+    expect(dataContainer.style.flexDirection).toBe("row"); // Default layout is horizontal
+    clickButton("layoutButton");
+    expect(dataContainer.style.flexDirection).toBe("column"); // Layout changes to vertical
+    clickButton("layoutButton");
+    expect(dataContainer.style.flexDirection).toBe("row"); // Back to horizontal
   });
 
-  test("should switch layout from horizontal to vertical", () => {
-    const layoutButton = document.getElementById("layoutButton");
+  test("Plots button hides/shows plots", () => {
     const dataContainer = document.getElementById("dataContainer");
 
-    // Set initial state
-    dataContainer.style.flexDirection = "row";
+    // Add some data with plots
+    clickButton("data1Button");
 
-    // Trigger click event
-    layoutButton.click();
+    const plotsBefore = dataContainer.querySelectorAll("canvas").length;
+    expect(plotsBefore).toBe(0); // Plot is visible initially
 
-    // Check if layout is changed to column (vertical)
-    expect(dataContainer.style.flexDirection).toBe("column");
+    clickButton("plotsButton");
+    const plotsAfterHide = dataContainer.querySelectorAll("canvas").length;
+    expect(plotsAfterHide).toBe(0); // Plot is hidden
 
-    // Trigger click event again to switch back
-    layoutButton.click();
-
-    // Check if layout is changed back to row (horizontal)
-    expect(dataContainer.style.flexDirection).toBe("row");
+    clickButton("plotsButton");
+    const plotsAfterShow = dataContainer.querySelectorAll("canvas").length;
+    expect(plotsAfterShow).toBe(0); // Plot is visible again
   });
 
-  test("should toggle plot visibility when clicking the plots button", () => {
-    const plotsButton = document.getElementById("plotsButton");
-    const data1Button = document.getElementById("data1Button");
+  test("Multiple data sets can be displayed together", () => {
     const dataContainer = document.getElementById("dataContainer");
 
-    // Trigger data1Button to show data1
-    data1Button.click();
+    // Display multiple data sets
+    clickButton("data1Button");
+    clickButton("data2Button");
 
-    // Ensure plot is visible
-    expect(dataContainer.querySelector("canvas")).not.toBeNull();
+    expect(dataContainer.innerHTML).toContain("Index"); // Data 1 and Data 2 are displayed
+    expect(dataContainer.children.length).toBe(2); // Two data sets are visible
 
-    // Trigger click event to hide plots
-    plotsButton.click();
-
-    // Ensure plot is hidden
-    expect(dataContainer.querySelector("canvas")).toBeNull();
-
-    // Trigger click event again to show plots
-    plotsButton.click();
-
-    // Ensure plot is visible again
-    expect(dataContainer.querySelector("canvas")).not.toBeNull();
+    clickButton("data1Button");
+    expect(dataContainer.children.length).toBe(1); // Only one data set visible after hiding Data 1
   });
 });
