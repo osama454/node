@@ -1,1 +1,3 @@
-document.body.textContent = 123;
+document.getElementById('clickMe').addEventListener('click', () => {
+  document.getElementById('output').textContent = 'Button Clicked!';
+});
