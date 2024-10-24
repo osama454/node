@@ -1,18 +1,127 @@
-<!-- example.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Page</title>
+  <title>Mini-Game CAPTCHA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    #grid {
+      display: none;
+      grid-template-columns: repeat(11, 20px);
+      grid-gap: 2px;
+      border: 2px solid black;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 20px;
+      height: 20px;
+      border: 1px solid black;
+    }
+    .blue { background-color: blue; }
+    .red { background-color: red; }
+    #startButton {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    #timeDisplay {
+      display: none;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
 </head>
 <body>
-    <h1 id="title">Hello World!</h1>
-    <button id="clickMe">Click Me!</button>
-    <div id="output"></div>
+  <button id="startButton">Start</button>
+  <div id="timeDisplay">Time: 0 ms</div>
+  <div id="grid"></div>
 
-    <script src="script.js">
-        
-    </script>
+  <script>
+    const grid = document.getElementById('grid');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const startButton = document.getElementById('startButton');
+
+    let startTime;
+    let piecePosition = { x: 5, y: 5 }; // Center of the grid
+    let occupiedCells = [];
+    let timerInterval;
+    let gameEnded = false; // Flag to indicate if the game has ended
+
+    // Create the grid and cells
+    for (let i = 0; i < 11 * 11; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      grid.appendChild(cell);
+    }
+
+    // Place the blue piece
+    grid.children[piecePosition.y * 11 + piecePosition.x].classList.add('blue');
+
+    // Place 3 red occupied cells randomly
+    while (occupiedCells.length < 3) {
+      const randomIndex = Math.floor(Math.random() * 11 * 11);
+      if (!occupiedCells.includes(randomIndex) && randomIndex !== piecePosition.y * 11 + piecePosition.x) {
+        occupiedCells.push(randomIndex);
+        grid.children[randomIndex].classList.add('red');
+      }
+    }
+
+    // Handle arrow key presses
+    document.addEventListener('keydown', (event) => {
+      if (startTime && !gameEnded) { // Only move if the game has started and not ended
+        const newPosition = { ...piecePosition };
+        switch (event.key) {
+          case 'ArrowUp': newPosition.y--; break;
+          case 'ArrowDown': newPosition.y++; break;
+          case 'ArrowLeft': newPosition.x--; break;
+          case 'ArrowRight': newPosition.x++; break;
+        }
+
+        // Check boundaries and occupied cells
+        if (newPosition.x >= 0 && newPosition.x < 11 && newPosition.y >= 0 && newPosition.y < 11) {
+          const newIndex = newPosition.y * 11 + newPosition.x;
+          if (occupiedCells.includes(newIndex)) {
+            occupiedCells = occupiedCells.filter(index => index !== newIndex);
+            grid.children[newIndex].classList.remove('red');
+          }
+
+          // Move the piece
+          grid.children[piecePosition.y * 11 + piecePosition.x].classList.remove('blue');
+          piecePosition = newPosition;
+          grid.children[piecePosition.y * 11 + piecePosition.x].classList.add('blue');
+
+          // Check if all occupied cells are unmarked
+          if (occupiedCells.length === 0) {
+            gameEnded = true; // Mark the game as ended
+            clearInterval(timerInterval);
+            const endTime = Date.now();
+            const finalElapsedTime = endTime - startTime;
+            timeDisplay.textContent = `Final Time: ${finalElapsedTime} ms`;
+            document.body.style.pointerEvents = 'none'; // Lock the page
+          }
+        }
+      }
+    });
+
+    // Start the game
+    startButton.addEventListener('click', () => {
+      startTime = Date.now();
+      startButton.style.display = 'none';
+      grid.style.display = 'grid';
+      timeDisplay.style.display = 'block';
+      timerInterval = setInterval(() => {
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - startTime;
+        timeDisplay.textContent = `Time: ${elapsedTime} ms`;
+      }, 10);
+    });
+  </script>
+
 </body>
 </html>
