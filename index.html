@@ -1,143 +1,189 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-  <title>Lightboard</title>
-  <style>
-    body {
-      font-family: monospace;
-      background-color: #222;
-      color: #eee;
-    }
-
-    .container {
-      display: grid;
-      gap: 2px;
-    }
-
-    .light {
-      width: 25px;
-      height: 25px;
-      background-color: #036;
-      /* Off color */
-      border-radius: 50%;
-      transition: background-color 0.2s;
-    }
-
-    .light.on {
-      background-color: #9cf;
-      /* On color */
-    }
-
-    .light.burnt {
-      background-color: #666;
-      /* Burnt color */
-    }
-  </style>
-</head>
-
-<body>
-  <h1>Lightboard</h1>
-  <div>
-    Rows: <input type="number" id="rows" value="10" min="1">
-    Cols: <input type="number" id="cols" value="10" min="1">
-    <button id="create">Create</button>
-  </div>
-  <div class="container" id="lightboard"></div>
-
-  <script>
-    const lightboardEl = document.getElementById('lightboard');
-const rowsInput = document.getElementById('rows');
-const colsInput = document.getElementById('cols');
-const createButton = document.getElementById('create');
-
-let lightboard = [];
-let turnCount = 0;
-
-function createLightboard(rows, cols) {
-  lightboardEl.innerHTML = ''; // Clear existing grid
-  lightboard = []; // Reset lightboard data
-  turnCount = 0;
-
-  lightboardEl.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
-
-  for (let i = 0; i < rows; i++) {
-    let row = [];
-    for (let j = 0; j < cols; j++) {
-      let light = {
-        state: Math.random() < 0.1 ? 1 : 0, // 10% chance of starting on
-        onTurns: 0,
-        burnt: false
-      };
-      row.push(light);
-      createLightElement(i, j, light.state);
-    }
-    lightboard.push(row);
-  }
-}
-
-function createLightElement(row, col, state) {
-  const lightEl = document.createElement('div');
-  lightEl.classList.add('light');
-  if (state === 1) lightEl.classList.add('on');
-  lightEl.addEventListener('click', () => toggleLight(row, col));
-  lightboardEl.appendChild(lightEl);
-}
-
-function toggleLight(row, col) {
-  const light = lightboard[row][col];
-  if (light.burnt) return; // Do nothing if burnt out
-
-  light.state = light.state === 1 ? 0 : 1;
-  light.onTurns = light.state === 1 ? light.onTurns + 1 : 0;
-
-  updateLight(row, col);
-
-  // Affect surrounding lights
-  for (let r = Math.max(0, row - 1); r <= Math.min(lightboard.length - 1, row + 1); r++) {
-    for (let c = Math.max(0, col - 1); c <= Math.min(lightboard[0].length - 1, col + 1); c++) {
-      if (r !== row || c !== col) { // Don't toggle the clicked light again
-        updateLight(r, c);
+  <head>
+    <title>Lightboard</title>
+    <style>
+      /* Styling the body */
+      body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
-    }
-  }
 
-  turnCount++;
-  checkBurnouts();
-}
-
-function updateLight(row, col) {
-  const light = lightboard[row][col];
-
-  // 20% chance to burn out when toggled
-  if (Math.random() < 0.2) light.burnt = true;
-
-  const lightEl = lightboardEl.children[row * lightboard[0].length + col];
-  lightEl.classList.toggle('on', light.state === 1);
-  lightEl.classList.toggle('burnt', light.burnt);
-}
-
-function checkBurnouts() {
-  for (let i = 0; i < lightboard.length; i++) {
-    for (let j = 0; j < lightboard[0].length; j++) {
-      const light = lightboard[i][j];
-      if (light.onTurns >= 5) {
-        light.burnt = true;
-        updateLight(i, j);
+      /* The container for the lightboard, displayed as a grid */
+      #lightboard {
+        display: grid;
+        border-collapse: collapse;
       }
-    }
-  }
-}
 
-createButton.addEventListener('click', () => {
-  const rows = parseInt(rowsInput.value);
-  const cols = parseInt(colsInput.value);
-  createLightboard(rows, cols);
-});
+      /* Each light element */
+      .light {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #ccc;
+        text-align: center;
+        cursor: pointer;
+      }
 
-// Initial lightboard creation
-createLightboard(10, 10); 
-  </script>
-</body>
+      /* Light that is on */
+      .on {
+        background-color: #90caf9; /* Light Blue */
+      }
 
+      /* Light that is off */
+      .off {
+        background-color: #e3f2fd; /* Lighter Blue */
+      }
+
+      /* Light that has burnt out */
+      .burnt {
+        background-color: #b0bec5; /* Grey */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Heading for the lightboard -->
+    <h1>Lightboard</h1>
+
+    <!-- Inputs to specify the number of rows and columns for the lightboard -->
+    <div>
+      Rows: <input type="number" id="rows" value="5" /> Columns:
+      <input type="number" id="cols" value="5" />
+      <button onclick="createLightboard()">Create</button>
+    </div>
+
+    <!-- Div to hold the lightboard -->
+    <div id="lightboard"></div>
+
+    <script>
+      let lightboard; // 2D array to represent the lightboard
+      let turns = 0; // Counter for the number of turns
+
+      /**
+       * Function to initialize the lightboard with user-specified rows and columns.
+       * Each light has a 10% chance to start "on" and a 90% chance to start "off".
+       */
+      function createLightboard() {
+        const rows = parseInt(document.getElementById("rows").value); // Get number of rows
+        const cols = parseInt(document.getElementById("cols").value); // Get number of columns
+        turns = 0; // Reset the turn count when creating a new board
+
+        // Initialize the lightboard as a 2D array
+        lightboard = Array(rows)
+          .fill(0)
+          .map(() => Array(cols).fill(0));
+
+        // Set up each light with an initial state and properties
+        for (let i = 0; i < rows; i++) {
+          for (let j = 0; j < cols; j++) {
+            if (Math.random() < 0.1) {
+              // 10% chance the light is "on" at the start
+              lightboard[i][j] = { state: 1, turnsOn: 0, burnt: false };
+            } else {
+              // Otherwise, the light starts "off"
+              lightboard[i][j] = { state: 0, turnsOn: 0, burnt: false };
+            }
+          }
+        }
+
+        // Render the lightboard after it has been created
+        renderLightboard();
+      }
+
+      /**
+       * Function to display the current state of the lightboard on the screen.
+       * It updates the DOM with the appropriate visual representation of each light.
+       */
+      function renderLightboard() {
+        const boardDiv = document.getElementById("lightboard");
+        boardDiv.innerHTML = ""; // Clear previous lightboard contents
+        boardDiv.style.gridTemplateColumns = `repeat(${lightboard[0].length}, 1fr)`; // Set grid layout
+
+        // Create and append a div for each light
+        for (let i = 0; i < lightboard.length; i++) {
+          for (let j = 0; j < lightboard[i].length; j++) {
+            const lightDiv = document.createElement("div");
+            lightDiv.classList.add("light");
+            lightDiv.dataset.row = i;
+            lightDiv.dataset.col = j;
+            lightDiv.addEventListener("click", toggleLight); // Add click event listener to toggle light state
+
+            // Update the class based on the light's current state
+            if (lightboard[i][j].burnt) {
+              lightDiv.classList.add("burnt"); // If burnt out, use burnt styling
+            } else if (lightboard[i][j].state === 1) {
+              lightDiv.classList.add("on"); // If the light is on, apply "on" class
+            } else {
+              lightDiv.classList.add("off"); // If the light is off, apply "off" class
+            }
+
+            // Append the light div to the board container
+            boardDiv.appendChild(lightDiv);
+          }
+        }
+      }
+
+      /**
+       * Function to handle toggling a light when it is clicked.
+       * Also toggles the surrounding lights and checks for burnouts.
+       */
+      function toggleLight(event) {
+        const row = parseInt(event.target.dataset.row); // Get row of the clicked light
+        const col = parseInt(event.target.dataset.col); // Get column of the clicked light
+
+        // If the clicked light is not burnt out
+        if (!lightboard[row][col].burnt) {
+          turns++; // Increment the turn count
+          lightboard[row][col].state = 1 - lightboard[row][col].state; // Toggle the clicked light's state
+
+          // If the light is turned on, increment its turnsOn count
+          if (lightboard[row][col].state === 1) {
+            lightboard[row][col].turnsOn++;
+          } else {
+            lightboard[row][col].turnsOn = 0; // Reset turnsOn if turned off
+          }
+
+          // Check if the light should burn out
+          if (Math.random() < 0.2 || lightboard[row][col].turnsOn > 5) {
+            lightboard[row][col].burnt = true; // Burn out the light
+            lightboard[row][col].state = 0; // Ensure burnt light is off
+          }
+
+          // Toggle surrounding lights, affecting only non-burnt lights
+          for (
+            let i = Math.max(0, row - 1);
+            i <= Math.min(lightboard.length - 1, row + 1);
+            i++
+          ) {
+            for (
+              let j = Math.max(0, col - 1);
+              j <= Math.min(lightboard[0].length - 1, col + 1);
+              j++
+            ) {
+              if (!(i === row && j === col) && !lightboard[i][j].burnt) {
+                lightboard[i][j].state = 1 - lightboard[i][j].state; // Toggle surrounding light states
+
+                // If the surrounding light is turned on, increment its turnsOn count
+                if (lightboard[i][j].state === 1) {
+                  lightboard[i][j].turnsOn++;
+                } else {
+                  lightboard[i][j].turnsOn = 0; // Reset turnsOn if turned off
+                }
+
+                // Check if the surrounding light should burn out
+                if (Math.random() < 0.2 || lightboard[i][j].turnsOn > 5) {
+                  lightboard[i][j].burnt = true; // Burn out the light
+                  lightboard[i][j].state = 0; // Ensure burnt light is off
+                }
+              }
+            }
+          }
+
+          // Re-render the lightboard after all updates
+          renderLightboard();
+        }
+      }
+    </script>
+  </body>
 </html>
