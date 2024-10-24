@@ -1,140 +1,134 @@
-// Accessing the data container and buttons from the HTML document
-const dataContainer = document.getElementById('dataContainer');
-const data1Button = document.getElementById('data1Button');
-const data2Button = document.getElementById('data2Button');
-const data3Button = document.getElementById('data3Button');
-const layoutButton = document.getElementById('layoutButton');
-const plotsButton = document.getElementById('plotsButton');
-
-// State variables to track visibility of data, layout orientation, and plot visibility
-let showData1 = false;
-let showData2 = false;
-let showData3 = false;
-let isVertical = false; // Determines layout (row vs column)
-let showPlots = true;   // Determines plot visibility
-
-// Data variables for each set of data (populated when the script loads)
-let data1 = null;
-let data2 = null;
-let data3 = null;
-
-// Generates random data between 1 and 10 for the tables and plots
-function generateRandomData() {
-  return Math.floor(Math.random() * 10) + 1;
-}
-
-// Generates a 3x2 table of data with indexes 1, 2, 3 and random values
-function generateData() {
-  return [[1, generateRandomData()], [2, generateRandomData()], [3, generateRandomData()]];
-}
-
-// Dynamically creates a table for the data
-function createTable(data) {
-  const table = document.createElement('table');
-  const headerRow = table.insertRow(); // Create header row
-  headerRow.insertCell().textContent = 'Index'; // Column 1: Index
-  headerRow.insertCell().textContent = 'Value'; // Column 2: Value
-
-  // Create data rows
-  data.forEach(rowData => {
-    const row = table.insertRow(); // Create a row for each data pair
-    row.insertCell().textContent = rowData[0]; // First column: Index
-    row.insertCell().textContent = rowData[1]; // Second column: Random value
-  });
-
-  return table; // Return the constructed table
-}
-
-// Creates a simple line plot for the data (you can replace this with a charting library)
-function createPlot(data) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 200;
-  canvas.height = 100;
-  const ctx = canvas.getContext('2d');
-
-  // Basic line plot drawing (replace with more advanced plotting)
-  ctx.beginPath();
-  ctx.moveTo(0, 100 - data[0][1] * 10); // Plot the first point
-  ctx.lineTo(100, 100 - data[1][1] * 10); // Plot the second point
-  ctx.lineTo(200, 100 - data[2][1] * 10); // Plot the third point
-  ctx.stroke();
-
-  return canvas; // Return the constructed canvas for the plot
-}
-
-// Updates the displayed data sections based on the current state
-function updateDataDisplay() {
-  dataContainer.innerHTML = ''; // Clear the previous content
-
-  // Display Data 1 if toggled on
-  if (showData1 && data1) {
-    const dataItem = document.createElement('div');
-    dataItem.classList.add('data-item');
-    dataItem.appendChild(createTable(data1)); // Append the table
-    if (showPlots) dataItem.appendChild(createPlot(data1)); // Append the plot if plots are visible
-    dataContainer.appendChild(dataItem); // Add the data section to the container
+// Function to create a random directed graph
+function createRandomGraph(numNodes, numEdges) {
+  const nodes = [];
+  // Create nodes with ids and labels
+  for (let i = 0; i < numNodes; i++) {
+    nodes.push({ id: i, label: i.toString() });
   }
 
-  // Display Data 2 if toggled on
-  if (showData2 && data2) {
-    const dataItem = document.createElement('div');
-    dataItem.classList.add('data-item');
-    dataItem.appendChild(createTable(data2)); // Append the table
-    if (showPlots) dataItem.appendChild(createPlot(data2)); // Append the plot if plots are visible
-    dataContainer.appendChild(dataItem); // Add the data section to the container
+  const edges = [];
+  let edgeCount = 0;
+  // Randomly create edges between nodes
+  while (edgeCount < numEdges) {
+    const from = Math.floor(Math.random() * numNodes);
+    const to = Math.floor(Math.random() * numNodes);
+    // Ensure no self-loops and no duplicate edges
+    if (from !== to && !edges.some((e) => e.from === from && e.to === to)) {
+      edges.push({ from, to, arrows: "to" }); // Add an arrow to indicate direction
+      edgeCount++;
+    }
   }
 
-  // Display Data 3 if toggled on
-  if (showData3 && data3) {
-    const dataItem = document.createElement('div');
-    dataItem.classList.add('data-item');
-    dataItem.appendChild(createTable(data3)); // Append the table
-    if (showPlots) dataItem.appendChild(createPlot(data3)); // Append the plot if plots are visible
-    dataContainer.appendChild(dataItem); // Add the data section to the container
+  return { nodes, edges };
+}
+
+// Function to transpose the graph (reverse all edge directions)
+function transposeGraph(graph) {
+  const transposedEdges = graph.edges.map((edge) => ({
+    from: edge.to,
+    to: edge.from,
+    arrows: "to",
+  }));
+  return { nodes: graph.nodes, edges: transposedEdges };
+}
+
+// Function for chromatic coloring using a simplified greedy algorithm
+function colorGraph(graph) {
+  const numNodes = graph.nodes.length;
+  const colors = {};
+  // Initialize all node colors to 0
+  for (let i = 0; i < numNodes; i++) {
+    colors[i] = 0;
   }
 
-  // Update the layout orientation (horizontal or vertical)
-  dataContainer.style.flexDirection = isVertical ? 'column' : 'row';
+  let maxColor = 0;
+  // Assign colors to nodes
+  for (let i = 0; i < numNodes; i++) {
+    let usedColors = new Set();
+    // Check colors of adjacent nodes
+    for (let j = 0; j < graph.edges.length; j++) {
+      if (graph.edges[j].from == i) {
+        usedColors.add(colors[graph.edges[j].to]);
+      } else if (graph.edges[j].to == i) {
+        usedColors.add(colors[graph.edges[j].from]);
+      }
+    }
+    // Find the smallest color not used by adjacent nodes
+    let color = 0;
+    while (usedColors.has(color)) {
+      color++;
+    }
+    colors[i] = color; // Assign the color to the node
+    maxColor = Math.max(maxColor, color); // Keep track of the maximum color used
+  }
+
+  // Apply the colors to the graph nodes
+  for (let i = 0; i < numNodes; i++) {
+    graph.nodes[i].color = getColor(colors[i], maxColor);
+  }
+
+  return graph;
 }
 
-// Initialize the data for all three datasets once when the script loads
-function initializeData() {
-  data1 = generateData();
-  data2 = generateData();
-  data3 = generateData();
+// Function to generate an HSL color based on the color index
+function getColor(color, maxColor) {
+  let h = (color * 360) / (maxColor + 1); // Distribute hues evenly
+  let s = "80%";
+  let l = "50%";
+  return `hsl(${h}, ${s}, ${l})`; // Return the HSL color string
 }
 
-// Event listeners for toggling data and layouts
+// Generate random numbers for nodes and edges
+const numNodes = Math.floor(Math.random() * 5) + 4; // Random number between 4 and 8
+const numEdges = Math.floor(Math.random() * 11) + 10; // Random number between 10 and 20
 
-// Toggle Data 1 visibility
-data1Button.addEventListener('click', () => {
-  showData1 = !showData1; // Toggle the state for Data 1
-  updateDataDisplay();    // Update the display to reflect the changes
-});
+// Create the initial graph data
+const graphData = createRandomGraph(numNodes, numEdges);
 
-// Toggle Data 2 visibility
-data2Button.addEventListener('click', () => {
-  showData2 = !showData2; // Toggle the state for Data 2
-  updateDataDisplay();    // Update the display to reflect the changes
-});
+// Options for the directed graphs (with arrows)
+const directedOptions = {
+  edges: {
+    arrows: {
+      to: { enabled: true, scaleFactor: 1 },
+      middle: { enabled: false },
+      from: { enabled: false },
+    },
+  },
+  physics: false, // Disable physics for static layout
+};
 
-// Toggle Data 3 visibility
-data3Button.addEventListener('click', () => {
-  showData3 = !showData3; // Toggle the state for Data 3
-  updateDataDisplay();    // Update the display to reflect the changes
-});
+// Options for the undirected graph (no arrows)
+const undirectedOptions = {
+  edges: {
+    arrows: {
+      to: { enabled: false },
+      middle: { enabled: false },
+      from: { enabled: false },
+    },
+  },
+  physics: false,
+};
 
-// Toggle layout between horizontal and vertical
-layoutButton.addEventListener('click', () => {
-  isVertical = !isVertical; // Toggle the layout direction
-  updateDataDisplay();      // Update the display to reflect the new layout
-});
+// Initialize the Directed Graph visualization
+new vis.Network(
+  document.getElementById("directedGraph"),
+  graphData,
+  directedOptions
+);
 
-// Toggle visibility of plots
-plotsButton.addEventListener('click', () => {
-  showPlots = !showPlots;   // Toggle plot visibility
-  updateDataDisplay();      // Update the display to show/hide plots
-});
+// Initialize the Transposed Graph visualization
+new vis.Network(
+  document.getElementById("transposedGraph"),
+  transposeGraph(graphData),
+  directedOptions
+);
 
-// Call this function to initialize the data when the script loads
-initializeData();
+// Prepare data for the Colored Graph by removing arrow properties
+new vis.Network(
+  document.getElementById("coloredGraph"),
+  colorGraph({
+    ...graphData,
+    edges: graphData.edges.map((e) => ({ from: e.from, to: e.to })),
+  }),
+  undirectedOptions
+);

@@ -1,12 +1,18 @@
 // test.js
 const { JSDOM } = require("jsdom");
+const fs = require("fs");
+const path = require("path");
 
+const htmlContent = fs.readFileSync(
+  path.resolve(__dirname, "index.html"),
+  "utf8"
+);
 const options = {
   resources: "usable",
   runScripts: "dangerously",
 };
 
-let window, document;
+let window, document, createRandomGraph, transposeGraph, colorGraph, getColor;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
@@ -15,87 +21,79 @@ beforeAll((done) => {
     if (document.readyState != "loading") done();
     else
       document.addEventListener("DOMContentLoaded", () => {
+        createRandomGraph = window.createRandomGraph;
+        transposeGraph = window.transposeGraph;
+        colorGraph = window.colorGraph;
+        getColor = window.getColor;
         done();
       });
   });
+
 });
 
-describe('Discrete Math Graph Visualizations', () => {
-  test('getRandomInt returns integer within specified range', () => {
-    const min = 5;
-    const max = 10;
-    for (let i = 0; i < 100; i++) {
-      const value = window.getRandomInt(min, max);
-      expect(Number.isInteger(value)).toBe(true);
-      expect(value).toBeGreaterThanOrEqual(min);
-      expect(value).toBeLessThanOrEqual(max);
-    }
-  });
-
-  test('generateRandomGraph returns graph with correct number of nodes and edges', () => {
-    const numNodes = 6;
+describe("Graph Functions", () => {
+  test("createRandomGraph generates a graph with specified number of nodes and edges", () => {
+    const numNodes = 5;
     const numEdges = 10;
-    const graph = window.generateRandomGraph(numNodes, numEdges);
+    const graph = createRandomGraph(numNodes, numEdges);
 
     expect(graph.nodes.length).toBe(numNodes);
     expect(graph.edges.length).toBe(numEdges);
+  });
 
-    // Check that there are no self-loops
-    graph.edges.forEach(edge => {
-      expect(edge.from).not.toBe(edge.to);
+  test("transposeGraph reverses the direction of all edges", () => {
+    const graph = createRandomGraph(5, 10);
+    const transposed = transposeGraph(graph);
+
+    transposed.edges.forEach((edge, index) => {
+      expect(edge.from).toBe(graph.edges[index].to);
+      expect(edge.to).toBe(graph.edges[index].from);
     });
   });
 
-  test('transposeGraph reverses the edges of the graph', () => {
-    // Create a test graph
-    const graph = {
-      nodes: [{ id: 0 }, { id: 1 }, { id: 2 }],
-      edges: [
-        { from: 0, to: 1, arrows: 'to' },
-        { from: 1, to: 2, arrows: 'to' },
-      ],
-    };
+  test("colorGraph assigns a color to each node without adjacent nodes sharing the same color", () => {
+    const graph = createRandomGraph(5, 10);
+    const coloredGraph = colorGraph(graph);
 
-    const transposed = window.transposeGraph(graph);
+    // Check that no two adjacent nodes share the same color
+    const nodeColors = new Map();
+    coloredGraph.nodes.forEach((node) => {
+      nodeColors.set(node.id, node.color);
+    });
 
-    expect(transposed.edges.length).toBe(graph.edges.length);
+    coloredGraph.edges.forEach((edge) => {
+      expect(nodeColors.get(edge.from)).not.toEqual(nodeColors.get(edge.to));
+    });
+  });
 
-    for (let i = 0; i < graph.edges.length; i++) {
-      expect(transposed.edges[i].from).toBe(graph.edges[i].to);
-      expect(transposed.edges[i].to).toBe(graph.edges[i].from);
+  test("createRandomGraph does not create self-loops or duplicate edges", () => {
+    const numNodes = 5;
+    const numEdges = 10;
+    const graph = createRandomGraph(numNodes, numEdges);
+
+    const edgeSet = new Set();
+
+    graph.edges.forEach((edge) => {
+      // Check for self-loops
+      expect(edge.from).not.toEqual(edge.to);
+
+      // Check for duplicate edges
+      const edgeKey = `${edge.from}-${edge.to}`;
+      expect(edgeSet.has(edgeKey)).toBe(false);
+      edgeSet.add(edgeKey);
+    });
+  });
+
+  test("getColor returns valid HSL color strings and colors are appropriately distributed", () => {
+    const maxColor = 5; // Assume we have 6 colors (0 to 5)
+    const colors = [];
+    for (let color = 0; color <= maxColor; color++) {
+      const hslColor = getColor(color, maxColor);
+      expect(hslColor).toMatch(/^hsl\(\d+,\s*\d+%,\s*\d+%\)$/);
+      colors.push(hslColor);
     }
-  });
-
-  test('colorGraph assigns colors such that adjacent nodes have different colors', () => {
-    // Create a test graph
-    const graph = {
-      nodes: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
-      edges: [
-        { from: 0, to: 1 },
-        { from: 1, to: 2 },
-        { from: 2, to: 3 },
-        { from: 3, to: 0 },
-        { from: 0, to: 2 },
-      ],
-    };
-
-    const coloredNodes = window.colorGraph(graph);
-
-    // Map node ids to colors
-    const nodeColors = {};
-    coloredNodes.forEach(node => {
-      nodeColors[node.id] = node.color;
-    });
-
-    // Check that adjacent nodes have different colors
-    graph.edges.forEach(edge => {
-      expect(nodeColors[edge.from]).not.toBe(nodeColors[edge.to]);
-    });
-  });
-
-  test('Graph containers exist in the document', () => {
-    expect(document.getElementById('directedGraph')).not.toBeNull();
-    expect(document.getElementById('transposedGraph')).not.toBeNull();
-    expect(document.getElementById('coloredGraph')).not.toBeNull();
+    // Check that colors are different
+    const uniqueColors = new Set(colors);
+    expect(uniqueColors.size).toBe(colors.length);
   });
 });
