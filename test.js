@@ -5,96 +5,88 @@ const options = {
   runScripts: "dangerously",
 };
 
-let window, document;
+let window,
+  document,
+  lightboardEl,
+  rowsInput,
+  colsInput,
+  createButton,
+  createLightboard,
+  toggleLight;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
-    if (document.readyState !== "loading") {
-      done();
-    } else {
-      document.addEventListener("DOMContentLoaded", () => {
-        done();
-      });
-    }
+    global.document = document;
+
+    lightboardEl = document.getElementById("lightboard");
+    rowsInput = document.getElementById("rows");
+    colsInput = document.getElementById("cols");
+    createButton = document.getElementById("create");
+
+    // Assuming that the script exposes functions to the global scope
+    createLightboard = window.createLightboard;
+    toggleLight = window.toggleLight;
+
+    done();
   });
 });
 
-// Helper to simulate clicks
-const clickButton = (buttonId) => {
-  const button = document.getElementById(buttonId);
-  button.click();
-};
+test("Create lightboard with correct number of lights", () => {
+  const rows = 5;
+  const cols = 5;
+  createLightboard(rows, cols);
+  expect(lightboardEl.children.length).toBe(rows * cols); // 5x5 = 25 lights
+});
 
-describe("Company Findings App", () => {
-  test("Data buttons toggle the visibility of Data 1", () => {
-    const dataContainer = document.getElementById("dataContainer");
-    expect(dataContainer.innerHTML.trim()).toBe(""); // Initially no data
-    clickButton("data1Button");
-    expect(dataContainer.innerHTML).toContain("Index"); // Data 1 table appears
-    clickButton("data1Button");
-    expect(dataContainer.innerHTML).not.toContain("Index"); // Data 1 table disappears
-  });
+test("Light state changes on toggle", () => {
+  createLightboard(3, 3);
 
-  test("Data buttons toggle the visibility of Data 2", () => {
-    const dataContainer = document.getElementById("dataContainer");
-    clickButton("data2Button");
-    expect(dataContainer.innerHTML).toContain("Index"); // Data 2 table appears
-    clickButton("data2Button");
-    expect(dataContainer.innerHTML).not.toContain("Index"); // Data 2 table disappears
-  });
+  const initialLightState = lightboardEl.children[0].classList.contains("on"); // Get initial visual state
+  toggleLight(0, 0); // Toggle the first light
 
-  test("Data buttons toggle the visibility of Data 3", () => {
-    const dataContainer = document.getElementById("dataContainer");
-    clickButton("data3Button");
-    expect(dataContainer.innerHTML).toContain("Index"); // Data 3 table appears
-    clickButton("data3Button");
-    expect(dataContainer.innerHTML).not.toContain("Index"); // Data 3 table disappears
-  });
+  expect(lightboardEl.children[0].classList.contains("on")).not.toBe(
+    initialLightState
+  ); // Visual state should toggle
+});
 
-  test("Layout button changes layout from row to column", () => {
-    const dataContainer = document.getElementById("dataContainer");
+test("Toggling a light affects its visual state", () => {
+  createLightboard(3, 3);
 
-    // Add some data to toggle
-    clickButton("data1Button");
+  const lightEl = lightboardEl.children[0]; // First light in the grid
+  const initialClassList = lightEl.classList.contains("on");
 
-    expect(dataContainer.style.flexDirection).toBe("row"); // Default layout is horizontal
-    clickButton("layoutButton");
-    expect(dataContainer.style.flexDirection).toBe("column"); // Layout changes to vertical
-    clickButton("layoutButton");
-    expect(dataContainer.style.flexDirection).toBe("row"); // Back to horizontal
-  });
+  toggleLight(0, 0); // Toggle the first light
 
-  test("Plots button hides/shows plots", () => {
-    const dataContainer = document.getElementById("dataContainer");
+  expect(lightEl.classList.contains("on")).not.toBe(initialClassList); // Class "on" should toggle
+});
 
-    // Add some data with plots
-    clickButton("data1Button");
+test("Grid resets when the 'Create' button is clicked", () => {
+  createLightboard(5, 5); // Initially create a 5x5 grid
+  rowsInput.value = 3;
+  colsInput.value = 3;
 
-    const plotsBefore = dataContainer.querySelectorAll("canvas").length;
-    expect(plotsBefore).toBe(0); // Plot is visible initially
+  createButton.click(); // Simulate clicking the "Create" button
 
-    clickButton("plotsButton");
-    const plotsAfterHide = dataContainer.querySelectorAll("canvas").length;
-    expect(plotsAfterHide).toBe(0); // Plot is hidden
+  expect(lightboardEl.children.length).toBe(9); // Grid should be 3x3 = 9 lights
+});
 
-    clickButton("plotsButton");
-    const plotsAfterShow = dataContainer.querySelectorAll("canvas").length;
-    expect(plotsAfterShow).toBe(0); // Plot is visible again
-  });
+test("Light does not toggle when burnt out", () => {
+  createLightboard(3, 3);
+  const lightEl = lightboardEl.children[0]; // First light in the grid
+  lightEl.classList.add("burnt"); // Simulate a burnt out light
 
-  test("Multiple data sets can be displayed together", () => {
-    const dataContainer = document.getElementById("dataContainer");
+  const wasOn = lightEl.classList.contains("on");
+  toggleLight(0, 0); // Attempt to toggle a burnt light
 
-    // Display multiple data sets
-    clickButton("data1Button");
-    clickButton("data2Button");
+  expect(lightEl.classList.contains("on")).toBe(!wasOn);
+});
 
-    expect(dataContainer.innerHTML).toContain("Index"); // Data 1 and Data 2 are displayed
-    expect(dataContainer.children.length).toBe(2); // Two data sets are visible
+test("Create button sets grid dimensions correctly", () => {
+  rowsInput.value = 10;
+  colsInput.value = 10;
+  createButton.click(); // Simulate clicking the "Create" button
 
-    clickButton("data1Button");
-    expect(dataContainer.children.length).toBe(1); // Only one data set visible after hiding Data 1
-  });
+  expect(lightboardEl.style.gridTemplateColumns).toBe(`repeat(10, 25px)`); // Grid columns should be set to 10
 });

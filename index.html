@@ -1,72 +1,143 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Company Findings</title>
+  <title>Lightboard</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
+      font-family: monospace;
+      background-color: #222;
+      color: #eee;
     }
 
-    #canvas {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .container {
+      display: grid;
+      gap: 2px;
     }
 
-    .button-container {
-      margin-top: 20px;
+    .light {
+      width: 25px;
+      height: 25px;
+      background-color: #036;
+      /* Off color */
+      border-radius: 50%;
+      transition: background-color 0.2s;
     }
 
-    button {
-      margin: 0 10px;
-      padding: 10px 20px;
-      border: none;
-      background-color: #eee;
-      cursor: pointer;
+    .light.on {
+      background-color: #9cf;
+      /* On color */
     }
 
-    .data-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    .data-item {
-      display: flex;
-      flex-direction: column;
-      margin: 10px;
-    }
-
-    table {
-      border-collapse: collapse;
-      margin-bottom: 10px;
-    }
-
-    td, th {
-      border: 1px solid black;
-      padding: 5px;
+    .light.burnt {
+      background-color: #666;
+      /* Burnt color */
     }
   </style>
 </head>
-<body>
-  <div id="canvas">
-    <h1>Company Findings</h1>
-    <div class="button-container">
-      <button id="data1Button">Data 1</button>
-      <button id="data2Button">Data 2</button>
-      <button id="data3Button">Data 3</button>
-      <button id="layoutButton">Horizontal/Vertical</button>
-      <button id="plotsButton">Show/Hide Plots</button>
-    </div>
-    <div class="data-container" id="dataContainer">
-    </div>
-  </div>
 
-  <script src="script.js"></script>
+<body>
+  <h1>Lightboard</h1>
+  <div>
+    Rows: <input type="number" id="rows" value="10" min="1">
+    Cols: <input type="number" id="cols" value="10" min="1">
+    <button id="create">Create</button>
+  </div>
+  <div class="container" id="lightboard"></div>
+
+  <script>
+    const lightboardEl = document.getElementById('lightboard');
+const rowsInput = document.getElementById('rows');
+const colsInput = document.getElementById('cols');
+const createButton = document.getElementById('create');
+
+let lightboard = [];
+let turnCount = 0;
+
+function createLightboard(rows, cols) {
+  lightboardEl.innerHTML = ''; // Clear existing grid
+  lightboard = []; // Reset lightboard data
+  turnCount = 0;
+
+  lightboardEl.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
+
+  for (let i = 0; i < rows; i++) {
+    let row = [];
+    for (let j = 0; j < cols; j++) {
+      let light = {
+        state: Math.random() < 0.1 ? 1 : 0, // 10% chance of starting on
+        onTurns: 0,
+        burnt: false
+      };
+      row.push(light);
+      createLightElement(i, j, light.state);
+    }
+    lightboard.push(row);
+  }
+}
+
+function createLightElement(row, col, state) {
+  const lightEl = document.createElement('div');
+  lightEl.classList.add('light');
+  if (state === 1) lightEl.classList.add('on');
+  lightEl.addEventListener('click', () => toggleLight(row, col));
+  lightboardEl.appendChild(lightEl);
+}
+
+function toggleLight(row, col) {
+  const light = lightboard[row][col];
+  if (light.burnt) return; // Do nothing if burnt out
+
+  light.state = light.state === 1 ? 0 : 1;
+  light.onTurns = light.state === 1 ? light.onTurns + 1 : 0;
+
+  updateLight(row, col);
+
+  // Affect surrounding lights
+  for (let r = Math.max(0, row - 1); r <= Math.min(lightboard.length - 1, row + 1); r++) {
+    for (let c = Math.max(0, col - 1); c <= Math.min(lightboard[0].length - 1, col + 1); c++) {
+      if (r !== row || c !== col) { // Don't toggle the clicked light again
+        updateLight(r, c);
+      }
+    }
+  }
+
+  turnCount++;
+  checkBurnouts();
+}
+
+function updateLight(row, col) {
+  const light = lightboard[row][col];
+
+  // 20% chance to burn out when toggled
+  if (Math.random() < 0.2) light.burnt = true;
+
+  const lightEl = lightboardEl.children[row * lightboard[0].length + col];
+  lightEl.classList.toggle('on', light.state === 1);
+  lightEl.classList.toggle('burnt', light.burnt);
+}
+
+function checkBurnouts() {
+  for (let i = 0; i < lightboard.length; i++) {
+    for (let j = 0; j < lightboard[0].length; j++) {
+      const light = lightboard[i][j];
+      if (light.onTurns >= 5) {
+        light.burnt = true;
+        updateLight(i, j);
+      }
+    }
+  }
+}
+
+createButton.addEventListener('click', () => {
+  const rows = parseInt(rowsInput.value);
+  const cols = parseInt(colsInput.value);
+  createLightboard(rows, cols);
+});
+
+// Initial lightboard creation
+createLightboard(10, 10); 
+  </script>
 </body>
+
 </html>
