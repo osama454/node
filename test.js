@@ -5,17 +5,15 @@ const options = {
   runScripts: "dangerously",
 };
 
-let window, document, gridContainer, timerDisplay, startButton;
+let window, document;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
-    gridContainer = document.getElementById("grid-container");
-    timerDisplay = document.getElementById("timer");
-    startButton = document.getElementById("startButton");
-    if (document.readyState !== "loading") done();
-    else {
+    if (document.readyState !== "loading") {
+      done();
+    } else {
       document.addEventListener("DOMContentLoaded", () => {
         done();
       });
@@ -23,85 +21,89 @@ beforeAll((done) => {
   });
 });
 
-describe("Captcha Mini-Game", () => {
+describe("Company Findings Webpage", () => {
   beforeEach(() => {
-    // Reset grid and buttons between tests
-    gridContainer = document.getElementById("grid-container");
-    timerDisplay = document.getElementById("timer");
-    startButton = document.getElementById("startButton");
+    // Reset the data container before each test
+    document.getElementById("dataContainer").innerHTML = "";
   });
 
-  test("Start button initializes game correctly", () => {
-    expect(gridContainer.style.display).toBe("none");
-    expect(timerDisplay.style.display).toBe("none");
-    startButton.click();
-    expect(gridContainer.style.display).toBe("grid");
-    expect(timerDisplay.style.display).toBe("block");
-    expect(startButton.style.display).toBe("none");
+  test("should toggle Data 1 display when clicking the Data 1 button", () => {
+    const data1Button = document.getElementById("data1Button");
+    const dataContainer = document.getElementById("dataContainer");
+
+    // Trigger click event
+    data1Button.click();
+
+    // Check if data1 content is rendered
+    expect(dataContainer.innerHTML).not.toBe("");
+    expect(dataContainer.querySelector("table")).not.toBeNull();
   });
 
-  test("Grid initializes with the correct number of cells", () => {
-    startButton.click();
-    expect(gridContainer.children.length).toBe(242); 
+  test("should toggle Data 2 display when clicking the Data 2 button", () => {
+    const data2Button = document.getElementById("data2Button");
+    const dataContainer = document.getElementById("dataContainer");
+
+    // Trigger click event
+    data2Button.click();
+
+    // Check if data2 content is rendered
+    expect(dataContainer.innerHTML).not.toBe("");
+    expect(dataContainer.querySelector("table")).not.toBeNull();
   });
 
-  test("Obstacles are placed correctly", () => {
-    startButton.click();
-    const obstacles = Array.from(gridContainer.children).filter(cell =>
-      cell.classList.contains("obstacle")
-    );
-    expect(obstacles.length).toBeGreaterThan(0); 
+  test("should toggle Data 3 display when clicking the Data 3 button", () => {
+    const data3Button = document.getElementById("data3Button");
+    const dataContainer = document.getElementById("dataContainer");
+
+    // Trigger click event
+    data3Button.click();
+
+    // Check if data3 content is rendered
+    expect(dataContainer.innerHTML).not.toBe("");
+    expect(dataContainer.querySelector("table")).not.toBeNull();
   });
 
-  test("Player is placed at the center of the grid", () => {
-    startButton.click();
-    const playerCell = gridContainer.children[5 * 11 + 5]; // Center cell (5,5)
-    expect(playerCell.classList.contains("player")).toBe(true);
+  test("should switch layout from horizontal to vertical", () => {
+    const layoutButton = document.getElementById("layoutButton");
+    const dataContainer = document.getElementById("dataContainer");
+
+    // Set initial state
+    dataContainer.style.flexDirection = "row";
+
+    // Trigger click event
+    layoutButton.click();
+
+    // Check if layout is changed to column (vertical)
+    expect(dataContainer.style.flexDirection).toBe("column");
+
+    // Trigger click event again to switch back
+    layoutButton.click();
+
+    // Check if layout is changed back to row (horizontal)
+    expect(dataContainer.style.flexDirection).toBe("row");
   });
 
-  test("Player moves correctly with arrow keys", () => {
-    startButton.click();
-    const initialPlayerPosition = 5 * 11 + 5;
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowUp" }));
-    const newPlayerPosition = 4 * 11 + 5;
-    expect(gridContainer.children[initialPlayerPosition].classList.contains("player")).toBe(false);
-    expect(gridContainer.children[newPlayerPosition].classList.contains("player")).toBe(true);
-  });
+  test("should toggle plot visibility when clicking the plots button", () => {
+    const plotsButton = document.getElementById("plotsButton");
+    const data1Button = document.getElementById("data1Button");
+    const dataContainer = document.getElementById("dataContainer");
 
-  test("Player does not move outside grid boundaries", () => {
-    startButton.click();
-    // Move player to the top left corner
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowUp" }));
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowUp" }));
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft" }));
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft" }));
-    // Attempt to move outside the grid
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowUp" }));
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft" }));
-    // Check player is still at (0, 0)
-    const playerPosition = 0 * 11 + 0;
-    expect(gridContainer.children[playerPosition].classList.contains("player")).toBe(false);
-  });
+    // Trigger data1Button to show data1
+    data1Button.click();
 
-  test("Player collides with obstacles and removes them", () => {
-    startButton.click();
-    // Find obstacle
-    const obstacleIndex = Array.from(gridContainer.children).findIndex(cell =>
-      cell.classList.contains("obstacle")
-    );
-    const obstacleRow = Math.floor(obstacleIndex / 11);
-    const obstacleCol = obstacleIndex % 11;
-    // Move player to obstacle
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: obstacleRow < 5 ? "ArrowUp" : "ArrowDown" }));
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: obstacleCol < 5 ? "ArrowLeft" : "ArrowRight" }));
-    // Check collision
-    expect(gridContainer.children[obstacleIndex].classList.contains("obstacle")).toBe(true);
-  });
+    // Ensure plot is visible
+    expect(dataContainer.querySelector("canvas")).not.toBeNull();
 
-  test("Win condition is checked after all obstacles are removed", () => {
-    startButton.click();
-    document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowUp" }));
-    const timerText = timerDisplay.textContent;
-    expect(timerText).toBe("");
+    // Trigger click event to hide plots
+    plotsButton.click();
+
+    // Ensure plot is hidden
+    expect(dataContainer.querySelector("canvas")).toBeNull();
+
+    // Trigger click event again to show plots
+    plotsButton.click();
+
+    // Ensure plot is visible again
+    expect(dataContainer.querySelector("canvas")).not.toBeNull();
   });
 });

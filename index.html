@@ -1,154 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Captcha Mini-Game</title>
-<style>
-body {
-  font-family: sans-serif;
-}
+  <title>Company Findings</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
 
-#grid-container {
-  display: grid;
-  grid-template-columns: repeat(11, 20px);
-  grid-template-rows: repeat(11, 20px);
-  border: 2px solid black;
-}
+    #canvas {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-.grid-cell {
-  width: 20px;
-  height: 20px;
-  border: 1px solid black;
-  box-sizing: border-box;
-}
+    .button-container {
+      margin-top: 20px;
+    }
 
-.player {
-  background-color: blue;
-}
+    button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: #eee;
+      cursor: pointer;
+    }
 
-.obstacle {
-  background-color: red;
-}
-</style>
+    .data-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .data-item {
+      display: flex;
+      flex-direction: column;
+      margin: 10px;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    td, th {
+      border: 1px solid black;
+      padding: 5px;
+    }
+  </style>
 </head>
 <body>
+  <div id="canvas">
+    <h1>Company Findings</h1>
+    <div class="button-container">
+      <button id="data1Button">Data 1</button>
+      <button id="data2Button">Data 2</button>
+      <button id="data3Button">Data 3</button>
+      <button id="layoutButton">Horizontal/Vertical</button>
+      <button id="plotsButton">Show/Hide Plots</button>
+    </div>
+    <div class="data-container" id="dataContainer">
+    </div>
+  </div>
 
-<button id="startButton">Start</button>
-<div id="grid-container" style="display: none;"></div>
-<p id="timer" style="display: none;"></p>
-
-<script>
-const gridSize = 11;
-let playerRow, playerCol;
-let obstacles = [];
-let startTime;
-let gameFinished = false;
-
-const gridContainer = document.getElementById('grid-container');
-const timerDisplay = document.getElementById('timer');
-const startButton = document.getElementById('startButton');
-
-startButton.addEventListener('click', startGame);
-
-function startGame() {
-  startTime = Date.now();
-  startButton.style.display = 'none';
-  gridContainer.style.display = 'grid';
-  timerDisplay.style.display = 'block';
-
-  initializeGrid();
-  placeObstacles();
-  placePlayer();
-
-  document.addEventListener('keydown', handleKeyPress);
-}
-
-function initializeGrid() {
-  for (let i = 0; i < gridSize * gridSize; i++) {
-    const cell = document.createElement('div');
-    cell.classList.add('grid-cell');
-    gridContainer.appendChild(cell);
-  }
-}
-
-function placeObstacles() {
-  obstacles = [];
-  while (obstacles.length < 3) {
-    const row = Math.floor(Math.random() * gridSize);
-    const col = Math.floor(Math.random() * gridSize);
-    const index = row * gridSize + col;
-
-    if (!obstacles.includes(index)) {
-      obstacles.push(index);
-      gridContainer.children[index].classList.add('obstacle');
-    }
-  }
-}
-
-function placePlayer() {
-  playerRow = Math.floor(gridSize / 2);
-  playerCol = Math.floor(gridSize / 2);
-  updatePlayerPosition();
-}
-
-function handleKeyPress(event) {
-  if (gameFinished) return;
-
-  switch (event.key) {
-    case 'ArrowUp':
-      movePlayer(-1, 0);
-      break;
-    case 'ArrowDown':
-      movePlayer(1, 0);
-      break;
-    case 'ArrowLeft':
-      movePlayer(0, -1);
-      break;
-    case 'ArrowRight':
-      movePlayer(0, 1);
-      break;
-  }
-}
-
-function movePlayer(deltaRow, deltaCol) {
-  const newRow = playerRow + deltaRow;
-  const newCol = playerCol + deltaCol;
-
-  if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
-    playerRow = newRow;
-    playerCol = newCol;
-    updatePlayerPosition();
-    checkObstacleCollision();
-    checkWinCondition();
-  }
-}
-
-function updatePlayerPosition() {
-  for (let i = 0; i < gridSize * gridSize; i++) {
-    gridContainer.children[i].classList.remove('player');
-  }
-  gridContainer.children[playerRow * gridSize + playerCol].classList.add('player');
-}
-
-function checkObstacleCollision() {
-  const playerIndex = playerRow * gridSize + playerCol;
-  const obstacleIndex = obstacles.indexOf(playerIndex);
-
-  if (obstacleIndex > -1) {
-    obstacles.splice(obstacleIndex, 1);
-    gridContainer.children[playerIndex].classList.remove('obstacle');
-  }
-}
-
-function checkWinCondition() {
-  if (obstacles.length === 0) {
-    gameFinished = true;
-    const endTime = Date.now();
-    const elapsedTime = endTime - startTime;
-    timerDisplay.textContent = `Time: ${elapsedTime}ms`;
-    document.removeEventListener('keydown', handleKeyPress);
-  }
-}
-</script>
-
+  <script src="script.js"></script>
 </body>
 </html>
