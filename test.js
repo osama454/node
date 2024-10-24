@@ -1,3 +1,4 @@
+// test.js
 const { JSDOM } = require("jsdom");
 
 const options = {
@@ -5,88 +6,96 @@ const options = {
   runScripts: "dangerously",
 };
 
-let window,
-  document,
-  lightboardEl,
-  rowsInput,
-  colsInput,
-  createButton,
-  createLightboard,
-  toggleLight;
+let window, document;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
-    global.document = document;
-
-    lightboardEl = document.getElementById("lightboard");
-    rowsInput = document.getElementById("rows");
-    colsInput = document.getElementById("cols");
-    createButton = document.getElementById("create");
-
-    // Assuming that the script exposes functions to the global scope
-    createLightboard = window.createLightboard;
-    toggleLight = window.toggleLight;
-
-    done();
+    if (document.readyState != "loading") done();
+    else
+      document.addEventListener("DOMContentLoaded", () => {
+        done();
+      });
   });
 });
 
-test("Create lightboard with correct number of lights", () => {
-  const rows = 5;
-  const cols = 5;
-  createLightboard(rows, cols);
-  expect(lightboardEl.children.length).toBe(rows * cols); // 5x5 = 25 lights
-});
+describe('Discrete Math Graph Visualizations', () => {
+  test('getRandomInt returns integer within specified range', () => {
+    const min = 5;
+    const max = 10;
+    for (let i = 0; i < 100; i++) {
+      const value = window.getRandomInt(min, max);
+      expect(Number.isInteger(value)).toBe(true);
+      expect(value).toBeGreaterThanOrEqual(min);
+      expect(value).toBeLessThanOrEqual(max);
+    }
+  });
 
-test("Light state changes on toggle", () => {
-  createLightboard(3, 3);
+  test('generateRandomGraph returns graph with correct number of nodes and edges', () => {
+    const numNodes = 6;
+    const numEdges = 10;
+    const graph = window.generateRandomGraph(numNodes, numEdges);
 
-  const initialLightState = lightboardEl.children[0].classList.contains("on"); // Get initial visual state
-  toggleLight(0, 0); // Toggle the first light
+    expect(graph.nodes.length).toBe(numNodes);
+    expect(graph.edges.length).toBe(numEdges);
 
-  expect(lightboardEl.children[0].classList.contains("on")).not.toBe(
-    initialLightState
-  ); // Visual state should toggle
-});
+    // Check that there are no self-loops
+    graph.edges.forEach(edge => {
+      expect(edge.from).not.toBe(edge.to);
+    });
+  });
 
-test("Toggling a light affects its visual state", () => {
-  createLightboard(3, 3);
+  test('transposeGraph reverses the edges of the graph', () => {
+    // Create a test graph
+    const graph = {
+      nodes: [{ id: 0 }, { id: 1 }, { id: 2 }],
+      edges: [
+        { from: 0, to: 1, arrows: 'to' },
+        { from: 1, to: 2, arrows: 'to' },
+      ],
+    };
 
-  const lightEl = lightboardEl.children[0]; // First light in the grid
-  const initialClassList = lightEl.classList.contains("on");
+    const transposed = window.transposeGraph(graph);
 
-  toggleLight(0, 0); // Toggle the first light
+    expect(transposed.edges.length).toBe(graph.edges.length);
 
-  expect(lightEl.classList.contains("on")).not.toBe(initialClassList); // Class "on" should toggle
-});
+    for (let i = 0; i < graph.edges.length; i++) {
+      expect(transposed.edges[i].from).toBe(graph.edges[i].to);
+      expect(transposed.edges[i].to).toBe(graph.edges[i].from);
+    }
+  });
 
-test("Grid resets when the 'Create' button is clicked", () => {
-  createLightboard(5, 5); // Initially create a 5x5 grid
-  rowsInput.value = 3;
-  colsInput.value = 3;
+  test('colorGraph assigns colors such that adjacent nodes have different colors', () => {
+    // Create a test graph
+    const graph = {
+      nodes: [{ id: 0 }, { id: 1 }, { id: 2 }, { id: 3 }],
+      edges: [
+        { from: 0, to: 1 },
+        { from: 1, to: 2 },
+        { from: 2, to: 3 },
+        { from: 3, to: 0 },
+        { from: 0, to: 2 },
+      ],
+    };
 
-  createButton.click(); // Simulate clicking the "Create" button
+    const coloredNodes = window.colorGraph(graph);
 
-  expect(lightboardEl.children.length).toBe(9); // Grid should be 3x3 = 9 lights
-});
+    // Map node ids to colors
+    const nodeColors = {};
+    coloredNodes.forEach(node => {
+      nodeColors[node.id] = node.color;
+    });
 
-test("Light does not toggle when burnt out", () => {
-  createLightboard(3, 3);
-  const lightEl = lightboardEl.children[0]; // First light in the grid
-  lightEl.classList.add("burnt"); // Simulate a burnt out light
+    // Check that adjacent nodes have different colors
+    graph.edges.forEach(edge => {
+      expect(nodeColors[edge.from]).not.toBe(nodeColors[edge.to]);
+    });
+  });
 
-  const wasOn = lightEl.classList.contains("on");
-  toggleLight(0, 0); // Attempt to toggle a burnt light
-
-  expect(lightEl.classList.contains("on")).toBe(!wasOn);
-});
-
-test("Create button sets grid dimensions correctly", () => {
-  rowsInput.value = 10;
-  colsInput.value = 10;
-  createButton.click(); // Simulate clicking the "Create" button
-
-  expect(lightboardEl.style.gridTemplateColumns).toBe(`repeat(10, 25px)`); // Grid columns should be set to 10
+  test('Graph containers exist in the document', () => {
+    expect(document.getElementById('directedGraph')).not.toBeNull();
+    expect(document.getElementById('transposedGraph')).not.toBeNull();
+    expect(document.getElementById('coloredGraph')).not.toBeNull();
+  });
 });

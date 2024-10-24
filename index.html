@@ -1,143 +1,131 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>Lightboard</title>
-  <style>
+  <title>Discrete Math Graph Visualizations</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style type="text/css">
     body {
-      font-family: monospace;
-      background-color: #222;
-      color: #eee;
+      font-family: sans-serif;
     }
-
     .container {
-      display: grid;
-      gap: 2px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-
-    .light {
-      width: 25px;
-      height: 25px;
-      background-color: #036;
-      /* Off color */
-      border-radius: 50%;
-      transition: background-color 0.2s;
-    }
-
-    .light.on {
-      background-color: #9cf;
-      /* On color */
-    }
-
-    .light.burnt {
-      background-color: #666;
-      /* Burnt color */
+    .graph-container {
+      border: 2px solid black;
+      padding: 10px;
+      text-align: center;
     }
   </style>
 </head>
-
 <body>
-  <h1>Lightboard</h1>
-  <div>
-    Rows: <input type="number" id="rows" value="10" min="1">
-    Cols: <input type="number" id="cols" value="10" min="1">
-    <button id="create">Create</button>
+
+<div class="container">
+  <div class="graph-container">
+    <h2>Random Directed Graph</h2>
+    <div id="directedGraph"></div>
   </div>
-  <div class="container" id="lightboard"></div>
 
-  <script>
-    const lightboardEl = document.getElementById('lightboard');
-const rowsInput = document.getElementById('rows');
-const colsInput = document.getElementById('cols');
-const createButton = document.getElementById('create');
+  <div class="graph-container">
+    <h2>Transposed Graph</h2>
+    <div id="transposedGraph"></div>
+  </div>
 
-let lightboard = [];
-let turnCount = 0;
+  <div class="graph-container">
+    <h2>Chromatic Coloring</h2>
+    <div id="coloredGraph"></div>
+  </div>
+</div>
 
-function createLightboard(rows, cols) {
-  lightboardEl.innerHTML = ''; // Clear existing grid
-  lightboard = []; // Reset lightboard data
-  turnCount = 0;
-
-  lightboardEl.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
-
-  for (let i = 0; i < rows; i++) {
-    let row = [];
-    for (let j = 0; j < cols; j++) {
-      let light = {
-        state: Math.random() < 0.1 ? 1 : 0, // 10% chance of starting on
-        onTurns: 0,
-        burnt: false
-      };
-      row.push(light);
-      createLightElement(i, j, light.state);
-    }
-    lightboard.push(row);
+<script type="text/javascript">
+  // Function to generate a random integer between min and max (inclusive)
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
-}
 
-function createLightElement(row, col, state) {
-  const lightEl = document.createElement('div');
-  lightEl.classList.add('light');
-  if (state === 1) lightEl.classList.add('on');
-  lightEl.addEventListener('click', () => toggleLight(row, col));
-  lightboardEl.appendChild(lightEl);
-}
+  // Function to create a random directed graph
+  function generateRandomGraph(numNodes, numEdges) {
+    const nodes = [];
+    const edges = [];
 
-function toggleLight(row, col) {
-  const light = lightboard[row][col];
-  if (light.burnt) return; // Do nothing if burnt out
+    // Create nodes
+    for (let i = 0; i < numNodes; i++) {
+      nodes.push({ id: i });
+    }
 
-  light.state = light.state === 1 ? 0 : 1;
-  light.onTurns = light.state === 1 ? light.onTurns + 1 : 0;
-
-  updateLight(row, col);
-
-  // Affect surrounding lights
-  for (let r = Math.max(0, row - 1); r <= Math.min(lightboard.length - 1, row + 1); r++) {
-    for (let c = Math.max(0, col - 1); c <= Math.min(lightboard[0].length - 1, col + 1); c++) {
-      if (r !== row || c !== col) { // Don't toggle the clicked light again
-        updateLight(r, c);
+    // Create edges
+    let edgeCount = 0;
+    while (edgeCount < numEdges) {
+      const from = getRandomInt(0, numNodes - 1);
+      const to = getRandomInt(0, numNodes - 1);
+      if (from !== to) { // Avoid self-loops
+        edges.push({ from, to, arrows: 'to' });
+        edgeCount++;
       }
     }
+
+    return { nodes, edges };
   }
 
-  turnCount++;
-  checkBurnouts();
-}
+  // Function to transpose a graph
+  function transposeGraph(graph) {
+    const transposedEdges = graph.edges.map(edge => ({
+      from: edge.to,
+      to: edge.from,
+      arrows: 'to'
+    }));
+    return { nodes: graph.nodes, edges: transposedEdges };
+  }
 
-function updateLight(row, col) {
-  const light = lightboard[row][col];
+  // Function to color a graph using a greedy algorithm (not optimal, but sufficient for demonstration)
+  function colorGraph(graph) {
+    const colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'];
+    const nodeColors = {};
 
-  // 20% chance to burn out when toggled
-  if (Math.random() < 0.2) light.burnt = true;
+    graph.nodes.forEach(node => {
+      const usedColors = new Set();
+      graph.edges.forEach(edge => {
+        if (edge.from === node.id && nodeColors[edge.to]) {
+          usedColors.add(nodeColors[edge.to]);
+        } else if (edge.to === node.id && nodeColors[edge.from]) {
+          usedColors.add(nodeColors[edge.from]);
+        }
+      });
 
-  const lightEl = lightboardEl.children[row * lightboard[0].length + col];
-  lightEl.classList.toggle('on', light.state === 1);
-  lightEl.classList.toggle('burnt', light.burnt);
-}
+      let colorIndex = 0;
+      while (usedColors.has(colors[colorIndex])) {
+        colorIndex++;
+      }
+      nodeColors[node.id] = colors[colorIndex];
+    });
 
-function checkBurnouts() {
-  for (let i = 0; i < lightboard.length; i++) {
-    for (let j = 0; j < lightboard[0].length; j++) {
-      const light = lightboard[i][j];
-      if (light.onTurns >= 5) {
-        light.burnt = true;
-        updateLight(i, j);
+    return graph.nodes.map(node => ({ ...node, color: nodeColors[node.id] }));
+  }
+
+  // Generate the random graph
+  const numNodes = getRandomInt(4, 8);
+  const numEdges = getRandomInt(10, 20);
+  const randomGraph = generateRandomGraph(numNodes, numEdges);
+
+  // Create the graph visualizations using vis.js
+  const directedGraphOptions = {
+    edges: {
+      arrows: {
+        to: { enabled: true, scaleFactor: 1 }
       }
     }
-  }
-}
+  };
 
-createButton.addEventListener('click', () => {
-  const rows = parseInt(rowsInput.value);
-  const cols = parseInt(colsInput.value);
-  createLightboard(rows, cols);
-});
+  const directedNetwork = new vis.Network(document.getElementById('directedGraph'), randomGraph, directedGraphOptions);
+  const transposedNetwork = new vis.Network(document.getElementById('transposedGraph'), transposeGraph(randomGraph), directedGraphOptions);
 
-// Initial lightboard creation
-createLightboard(10, 10); 
-  </script>
+  // Remove arrows for the colored graph to make it undirected
+  const undirectedGraphEdges = randomGraph.edges.map(edge => ({ from: edge.from, to: edge.to }));
+  const coloredNetwork = new vis.Network(document.getElementById('coloredGraph'), { nodes: colorGraph(randomGraph), edges: undirectedGraphEdges }, {});
+</script>
+
 </body>
-
 </html>
