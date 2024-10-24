@@ -1,127 +1,154 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mini-Game CAPTCHA</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background-color: #f0f0f0;
-    }
-    #grid {
-      display: none;
-      grid-template-columns: repeat(11, 20px);
-      grid-gap: 2px;
-      border: 2px solid black;
-      margin-top: 20px;
-    }
-    .cell {
-      width: 20px;
-      height: 20px;
-      border: 1px solid black;
-    }
-    .blue { background-color: blue; }
-    .red { background-color: red; }
-    #startButton {
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-    #timeDisplay {
-      display: none;
-      margin-top: 20px;
-      font-size: 18px;
-    }
-  </style>
+<title>Captcha Mini-Game</title>
+<style>
+body {
+  font-family: sans-serif;
+}
+
+#grid-container {
+  display: grid;
+  grid-template-columns: repeat(11, 20px);
+  grid-template-rows: repeat(11, 20px);
+  border: 2px solid black;
+}
+
+.grid-cell {
+  width: 20px;
+  height: 20px;
+  border: 1px solid black;
+  box-sizing: border-box;
+}
+
+.player {
+  background-color: blue;
+}
+
+.obstacle {
+  background-color: red;
+}
+</style>
 </head>
 <body>
-  <button id="startButton">Start</button>
-  <div id="timeDisplay">Time: 0 ms</div>
-  <div id="grid"></div>
 
-  <script>
-    const grid = document.getElementById('grid');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const startButton = document.getElementById('startButton');
+<button id="startButton">Start</button>
+<div id="grid-container" style="display: none;"></div>
+<p id="timer" style="display: none;"></p>
 
-    let startTime;
-    let piecePosition = { x: 5, y: 5 }; // Center of the grid
-    let occupiedCells = [];
-    let timerInterval;
-    let gameEnded = false; // Flag to indicate if the game has ended
+<script>
+const gridSize = 11;
+let playerRow, playerCol;
+let obstacles = [];
+let startTime;
+let gameFinished = false;
 
-    // Create the grid and cells
-    for (let i = 0; i < 11 * 11; i++) {
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      grid.appendChild(cell);
+const gridContainer = document.getElementById('grid-container');
+const timerDisplay = document.getElementById('timer');
+const startButton = document.getElementById('startButton');
+
+startButton.addEventListener('click', startGame);
+
+function startGame() {
+  startTime = Date.now();
+  startButton.style.display = 'none';
+  gridContainer.style.display = 'grid';
+  timerDisplay.style.display = 'block';
+
+  initializeGrid();
+  placeObstacles();
+  placePlayer();
+
+  document.addEventListener('keydown', handleKeyPress);
+}
+
+function initializeGrid() {
+  for (let i = 0; i < gridSize * gridSize; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('grid-cell');
+    gridContainer.appendChild(cell);
+  }
+}
+
+function placeObstacles() {
+  obstacles = [];
+  while (obstacles.length < 3) {
+    const row = Math.floor(Math.random() * gridSize);
+    const col = Math.floor(Math.random() * gridSize);
+    const index = row * gridSize + col;
+
+    if (!obstacles.includes(index)) {
+      obstacles.push(index);
+      gridContainer.children[index].classList.add('obstacle');
     }
+  }
+}
 
-    // Place the blue piece
-    grid.children[piecePosition.y * 11 + piecePosition.x].classList.add('blue');
+function placePlayer() {
+  playerRow = Math.floor(gridSize / 2);
+  playerCol = Math.floor(gridSize / 2);
+  updatePlayerPosition();
+}
 
-    // Place 3 red occupied cells randomly
-    while (occupiedCells.length < 3) {
-      const randomIndex = Math.floor(Math.random() * 11 * 11);
-      if (!occupiedCells.includes(randomIndex) && randomIndex !== piecePosition.y * 11 + piecePosition.x) {
-        occupiedCells.push(randomIndex);
-        grid.children[randomIndex].classList.add('red');
-      }
-    }
+function handleKeyPress(event) {
+  if (gameFinished) return;
 
-    // Handle arrow key presses
-    document.addEventListener('keydown', (event) => {
-      if (startTime && !gameEnded) { // Only move if the game has started and not ended
-        const newPosition = { ...piecePosition };
-        switch (event.key) {
-          case 'ArrowUp': newPosition.y--; break;
-          case 'ArrowDown': newPosition.y++; break;
-          case 'ArrowLeft': newPosition.x--; break;
-          case 'ArrowRight': newPosition.x++; break;
-        }
+  switch (event.key) {
+    case 'ArrowUp':
+      movePlayer(-1, 0);
+      break;
+    case 'ArrowDown':
+      movePlayer(1, 0);
+      break;
+    case 'ArrowLeft':
+      movePlayer(0, -1);
+      break;
+    case 'ArrowRight':
+      movePlayer(0, 1);
+      break;
+  }
+}
 
-        // Check boundaries and occupied cells
-        if (newPosition.x >= 0 && newPosition.x < 11 && newPosition.y >= 0 && newPosition.y < 11) {
-          const newIndex = newPosition.y * 11 + newPosition.x;
-          if (occupiedCells.includes(newIndex)) {
-            occupiedCells = occupiedCells.filter(index => index !== newIndex);
-            grid.children[newIndex].classList.remove('red');
-          }
+function movePlayer(deltaRow, deltaCol) {
+  const newRow = playerRow + deltaRow;
+  const newCol = playerCol + deltaCol;
 
-          // Move the piece
-          grid.children[piecePosition.y * 11 + piecePosition.x].classList.remove('blue');
-          piecePosition = newPosition;
-          grid.children[piecePosition.y * 11 + piecePosition.x].classList.add('blue');
+  if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+    playerRow = newRow;
+    playerCol = newCol;
+    updatePlayerPosition();
+    checkObstacleCollision();
+    checkWinCondition();
+  }
+}
 
-          // Check if all occupied cells are unmarked
-          if (occupiedCells.length === 0) {
-            gameEnded = true; // Mark the game as ended
-            clearInterval(timerInterval);
-            const endTime = Date.now();
-            const finalElapsedTime = endTime - startTime;
-            timeDisplay.textContent = `Final Time: ${finalElapsedTime} ms`;
-            document.body.style.pointerEvents = 'none'; // Lock the page
-          }
-        }
-      }
-    });
+function updatePlayerPosition() {
+  for (let i = 0; i < gridSize * gridSize; i++) {
+    gridContainer.children[i].classList.remove('player');
+  }
+  gridContainer.children[playerRow * gridSize + playerCol].classList.add('player');
+}
 
-    // Start the game
-    startButton.addEventListener('click', () => {
-      startTime = Date.now();
-      startButton.style.display = 'none';
-      grid.style.display = 'grid';
-      timeDisplay.style.display = 'block';
-      timerInterval = setInterval(() => {
-        const currentTime = Date.now();
-        const elapsedTime = currentTime - startTime;
-        timeDisplay.textContent = `Time: ${elapsedTime} ms`;
-      }, 10);
-    });
-  </script>
+function checkObstacleCollision() {
+  const playerIndex = playerRow * gridSize + playerCol;
+  const obstacleIndex = obstacles.indexOf(playerIndex);
+
+  if (obstacleIndex > -1) {
+    obstacles.splice(obstacleIndex, 1);
+    gridContainer.children[playerIndex].classList.remove('obstacle');
+  }
+}
+
+function checkWinCondition() {
+  if (obstacles.length === 0) {
+    gameFinished = true;
+    const endTime = Date.now();
+    const elapsedTime = endTime - startTime;
+    timerDisplay.textContent = `Time: ${elapsedTime}ms`;
+    document.removeEventListener('keydown', handleKeyPress);
+  }
+}
+</script>
 
 </body>
 </html>
