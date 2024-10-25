@@ -1,76 +1,31 @@
-const canvas = document.getElementById('simulationCanvas');
-const ctx = canvas.getContext('2d');
-const massSlider = document.getElementById('mass');
-const velocitySlider = document.getElementById('velocity');
-const massValue = document.getElementById('massValue');
-const velocityValue = document.getElementById('velocityValue');
+const modal = document.getElementById('modal');
+const dropdown = document.getElementById('directionDropdown');
 
-let particleMass = parseFloat(massSlider.value);
-let initialVelocity = parseFloat(velocitySlider.value);
-const G = 1; // Gravitational constant (adjusted for simulation)
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
+// Set initial position
+modal.style.top = '50%';
+modal.style.left = '50%';
+modal.style.transform = 'translate(-50%, -50%)';
 
-let particleX = 50;
-let particleY = centerY;
-let particleVx = initialVelocity;
-let particleVy = 0;
+dropdown.addEventListener('change', () => {
+  const direction = dropdown.value;
+  const currentLeft = parseFloat(modal.style.left) || 50;
+  const currentTop = parseFloat(modal.style.top) || 50;
+  const step = 10; // percentage to move
 
-function drawForceField() {
-  // (Simplified for visualization) Draw lines radiating from the center
-  for (let i = 0; i < 360; i += 15) {
-    const angle = i * Math.PI / 180;
-    const x = centerX + Math.cos(angle) * 50;
-    const y = centerY + Math.sin(angle) * 50;
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
+  switch (direction) {
+    case 'up':
+      modal.style.top = Math.max(0, currentTop - step) + '%';
+      break;
+    case 'down':
+      modal.style.top = Math.min(100, currentTop + step) + '%';
+      break;
+    case 'left':
+      modal.style.left = Math.max(0, currentLeft - step) + '%';
+      break;
+    case 'right':
+      modal.style.left = Math.min(100, currentLeft + step) + '%';
+      break;
   }
-}
-
-function updateParticle() {
-  const dx = centerX - particleX;
-  const dy = centerY - particleY;
-  const distSq = dx * dx + dy * dy;
-  const dist = Math.sqrt(distSq);
-  const force = G / distSq; // Assuming central mass = 1
-
-  const ax = force * dx / dist;
-  const ay = force * dy / dist;
-
-  particleVx += ax;
-  particleVy += ay;
-
-  particleX += particleVx;
-  particleY += particleVy;
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawForceField();
-
-  ctx.beginPath();
-  ctx.arc(particleX, particleY, 5, 0, 2 * Math.PI);
-  ctx.fill();
-
-  updateParticle();
-
-  requestAnimationFrame(draw);
-}
-
-massSlider.addEventListener('input', () => {
-  particleMass = parseFloat(massSlider.value);
-  massValue.textContent = particleMass;
+  
+  dropdown.value = ''; // Reset the dropdown
 });
-
-velocitySlider.addEventListener('input', () => {
-  initialVelocity = parseFloat(velocitySlider.value);
-  velocityValue.textContent = initialVelocity;
-  particleVx = initialVelocity; // Reset simulation with new velocity
-  particleVy = 0;
-  particleX = 50;
-  particleY = centerY;
-});
-
-draw();
