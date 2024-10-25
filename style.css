@@ -1,0 +1,24 @@
+body {
+  font-family: Arial, sans-serif; /* Font family */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+#simulationCanvas {
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 10px;
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.equations {
+  margin-top: 20px;
+}
