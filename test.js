@@ -5,100 +5,125 @@ const options = {
   runScripts: "dangerously",
 };
 
-let window, document, modal, dropdown;
+let window, document;
+let startGame, checkWord, switchPlayer, determineWinner;
+let player1Score, player2Score, player1TurnsLeft, player2TurnsLeft;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
+
     if (document.readyState !== "loading") done();
     else
       document.addEventListener("DOMContentLoaded", () => {
         done();
       });
-    modal = document.getElementById('modal');
-    dropdown = document.getElementById('directionDropdown');
+
+    // Import functions from the script
+    startGame = window.startGame;
+    checkWord = window.checkWord;
+    switchPlayer = window.switchPlayer;
+    determineWinner = window.determineWinner;
+
+    // Initialize variables
+    player1Score = window.player1Score;
+    player2Score = window.player2Score;
+    player1TurnsLeft = window.player1TurnsLeft;
+    player2TurnsLeft = window.player2TurnsLeft;
   });
 });
 
-describe("Modal Repositioning", () => {
+describe("Word Game", () => {
   beforeEach(() => {
-    // Reset modal position to center for each test
-    modal.style.top = '50%';
-    modal.style.left = '50%';
-    dropdown.value = ''; // Ensure dropdown is reset
+    // Reset scores and turns
+    window.player1Score = 0;
+    window.player2Score = 0;
+    window.player1TurnsLeft = 3;
+    window.player2TurnsLeft = 3;
   });
 
-  test("initial position of modal is centered", () => {
-    expect(modal.style.top).toBe("50%");
-    expect(modal.style.left).toBe("50%");
-    expect(modal.style.transform).toBe("translate(-50%, -50%)");
+  test("should generate a number and start a 10-second timer when startGame is called", () => {
+    startGame(1);
+    const playerNumber = document.getElementById("player1Number").innerText;
+    const timer = parseInt(document.getElementById("timer").innerText);
+
+    expect(playerNumber).toBeTruthy();
+    expect(timer).toBe(10);
   });
 
-  test("moves modal up within boundaries", () => {
-    dropdown.value = "up";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.top)).toBe(40); // Should decrease by 10%
+  test("should reduce turns left and switch player after each valid attempt", () => {
+    startGame(1);
+    const initialTurns = player1TurnsLeft;
+    checkWord(1);
+    expect(window.player1TurnsLeft).toBe(initialTurns - 2);
+
+    switchPlayer();
+    expect(document.getElementById("currentPlayer").innerText).toBe("Player 2's Turn");
   });
 
-  test("moves modal down within boundaries", () => {
-    dropdown.value = "down";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.top)).toBe(60); // Should increase by 10%
+  test("should correctly update score and used letters for even-numbered input with valid word", () => {
+    startGame(1);
+    document.getElementById("player1Number").innerText = "2";
+    document.getElementById("player1Word").value = "elephant"; // > 7 characters
+
+    checkWord(1);
+
+    expect(window.player1Score).toBe(1);
+    expect(document.getElementById("player1Score").innerText).toBe("Score: 1");
+    expect(document.getElementById("player1UsedLetters").innerText).toContain("e, t");
   });
 
-  test("moves modal left within boundaries", () => {
-    dropdown.value = "left";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.left)).toBe(40); // Should decrease by 10%
+  test("should restrict words with letters used in previous rounds", () => {
+    startGame(1);
+    document.getElementById("player1Number").innerText = "2";
+    document.getElementById("player1Word").value = "elephant";
+    checkWord(1); // Adds "e" and "t" to used letters
+
+    document.getElementById("player1Word").value = "emulate"; // Starts with "e", which was used
+    checkWord(1);
+    expect(document.getElementById("player1Result").innerText).toBe("Incorrect!");
   });
 
-  test("moves modal right within boundaries", () => {
-    dropdown.value = "right";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.left)).toBe(60); // Should increase by 10%
+  test("should prevent words with odd-numbered input if word length is not less than 7", () => {
+    startGame(1);
+    document.getElementById("player1Number").innerText = "3";
+    document.getElementById("player1Word").value = "hello";
+
+    checkWord(1);
+
+    expect(document.getElementById("player1Result").innerText).toBe("Correct!");
   });
 
-  test("does not move modal up beyond top boundary", () => {
-    modal.style.top = "5%";
-    dropdown.value = "up";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.top)).toBe(0); // Should not go below 0%
+  test("should alert the winner or if it's a tie after all turns are taken", () => {
+    window.player1Score = 3;
+    window.player2Score = 2;
+    player1TurnsLeft = 0;
+    player2TurnsLeft = 0;
+
+    determineWinner();
+
+    expect(window.alert).toHaveBeenCalledWith("Player 1 wins with a score of 3!");
   });
 
-  test("does not move modal down beyond bottom boundary", () => {
-    modal.style.top = "95%";
-    dropdown.value = "down";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.top)).toBe(100); // Should not exceed 100%
+  test("should end the game and announce a tie if both players have the same score", () => {
+    window.player1Score = 2;
+    window.player2Score = 2;
+    player1TurnsLeft = 0;
+    player2TurnsLeft = 0;
+
+    determineWinner();
+
+    expect(window.alert).toHaveBeenCalledWith("It's a tie with both players scoring 2!");
   });
 
-  test("does not move modal left beyond left boundary", () => {
-    modal.style.left = "5%";
-    dropdown.value = "left";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.left)).toBe(0); // Should not go below 0%
-  });
+  test("should reduce time and alert 'Time's up!' if timer reaches zero", () => {
+    jest.useFakeTimers();
+    startGame(1);
+    jest.advanceTimersByTime(10000);
 
-  test("does not move modal right beyond right boundary", () => {
-    modal.style.left = "95%";
-    dropdown.value = "right";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(parseFloat(modal.style.left)).toBe(100); // Should not exceed 100%
-  });
-
-  test("resets dropdown value after movement", () => {
-    dropdown.value = "down";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(dropdown.value).toBe("");
-  });
-
-  test("does not move modal if no direction is selected", () => {
-    const initialTop = modal.style.top;
-    const initialLeft = modal.style.left;
-    dropdown.value = "";
-    dropdown.dispatchEvent(new window.Event("change"));
-    expect(modal.style.top).toBe(initialTop);
-    expect(modal.style.left).toBe(initialLeft);
+    expect(document.getElementById("timer").innerText).toBe("0");
+    expect(window.alert).toHaveBeenCalledWith("Time's up! Player 1 loses this turn.");
+    jest.useRealTimers();
   });
 });
