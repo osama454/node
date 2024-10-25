@@ -3,191 +3,225 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Person's Network</title>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <title>Central Force Particle Trajectory Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <style>
-      .node {
-        fill: #1f77b4;
-      }
-      .label {
+      body {
         font-family: Arial, sans-serif;
-        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
+      canvas {
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+      }
+      #controls {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      label {
+        text-align: right;
       }
     </style>
   </head>
   <body>
-    <svg width="600" height="400"></svg>
-    <div>
-      <input id="new-person" type="text" placeholder="Name" />
-      <button id="add-person">Add Person</button>
+    <h1>Central Force Particle Trajectory Simulation</h1>
+    <canvas id="simulationCanvas" width="600" height="600"></canvas>
+    <div id="controls">
+      <label for="mass">Mass (kg):</label>
+      <input type="range" id="mass" min="1" max="100" value="10" step="1" />
+      <label for="initialVelocity">Initial Velocity (m/s):</label>
+      <input
+        type="range"
+        id="initialVelocity"
+        min="1"
+        max="100"
+        value="50"
+        step="1"
+      />
+      <label for="forceConstant">Force Constant (N⋅m²/kg²):</label>
+      <input
+        type="range"
+        id="forceConstant"
+        min="1000"
+        max="100000"
+        value="50000"
+        step="1000"
+      />
     </div>
-    <div>
-      <select id="source-person"></select>
-      <select id="target-person"></select>
-      <button id="add-relation">Add Relation</button>
+    <button id="startStop">Start/Stop</button>
+    <div id="equations">
+      <p>Equation of motion: \( \vec{F} = -k\frac{m}{r^2}\hat{r} \)</p>
+      <p>Where:</p>
+      <ul>
+        <li>\( \vec{F} \) is the force vector</li>
+        <li>\( k \) is the force constant</li>
+        <li>\( m \) is the mass of the particle</li>
+        <li>\( r \) is the distance from the center</li>
+        <li>
+          \( \hat{r} \) is the unit vector pointing from the center to the
+          particle
+        </li>
+      </ul>
     </div>
-    <script>
-      const svg = d3.select("svg");
-      const width = svg.attr("width");
-      const height = svg.attr("height");
 
-      const data = {
-        nodes: [
-          { id: "Alice" },
-          { id: "Bob" },
-          { id: "Charlie" },
-          { id: "Diana" },
-        ],
-        links: [
-          { source: "Alice", target: "Bob" },
-          { source: "Alice", target: "Charlie" },
-          { source: "Bob", target: "Diana" },
-          { source: "Diana", target: "Charlie" },
-        ],
+    <script>
+      const canvas = document.getElementById("simulationCanvas");
+      const ctx = canvas.getContext("2d");
+      const massSlider = document.getElementById("mass");
+      const velocitySlider = document.getElementById("initialVelocity");
+      const forceConstantSlider = document.getElementById("forceConstant");
+      const startStopButton = document.getElementById("startStop");
+
+      running = false;
+      let particle = {
+        x: 300,
+        y: 300,
+        vx: 0,
+        vy: 0,
+        ax: 0,
+        ay: 0,
+        mass: 10,
       };
 
-      const simulation = d3
-        .forceSimulation(data.nodes)
-        .force(
-          "link",
-          d3
-            .forceLink(data.links)
-            .id((d) => d.id)
-            .distance(100)
-        )
-        .force("charge", d3.forceManyBody().strength(-400))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+      let forceConstant = 50000;
+      const dt = 0.01;
+      center = { x: 300, y: 300 };
+      let trail = [];
 
-      let link = svg
-        .append("g")
-        .selectAll("line")
-        .data(data.links)
-        .enter()
-        .append("line")
-        .attr("stroke", "#999")
-        .attr("stroke-width", 1.5);
+      function initializeSimulation() {
+        particle.mass = parseFloat(massSlider.value);
+        const initialVelocity = parseFloat(velocitySlider.value);
+        forceConstant = parseFloat(forceConstantSlider.value);
 
-      let node = svg
-        .append("g")
-        .selectAll("circle")
-        .data(data.nodes)
-        .enter()
-        .append("circle")
-        .attr("r", 8)
-        .attr("class", "node");
+        particle.x = center.x + 200;
+        particle.y = center.y;
+        particle.vx = 0;
+        particle.vy = -initialVelocity;
 
-      let label = svg
-        .append("g")
-        .selectAll("text")
-        .data(data.nodes)
-        .enter()
-        .append("text")
-        .attr("class", "label")
-        .text((d) => d.id);
-
-      function ticked() {
-        link
-          .attr("x1", (d) => d.source.x)
-          .attr("y1", (d) => d.source.y)
-          .attr("x2", (d) => d.target.x)
-          .attr("y2", (d) => d.target.y);
-
-        node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-
-        label.attr("x", (d) => d.x + 10).attr("y", (d) => d.y + 5);
+        trail = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawVectorField();
       }
 
-      simulation.on("tick", ticked);
+      function calculateForce(x, y) {
+        const dx = x - center.x;
+        const dy = y - center.y;
+        const r = Math.sqrt(dx * dx + dy * dy);
+        const forceMagnitude = (forceConstant * particle.mass) / (r * r);
 
-      const addPersonButton = document.getElementById("add-person");
-      const addPersonInput = document.getElementById("new-person");
-      const addRelationButton = document.getElementById("add-relation");
-      const sourcePersonSelect = document.getElementById("source-person");
-      const targetPersonSelect = document.getElementById("target-person");
-
-      function updatePersonSelects() {
-        sourcePersonSelect.innerHTML = "";
-        targetPersonSelect.innerHTML = "";
-        data.nodes.forEach((node) => {
-          const option = document.createElement("option");
-          option.value = node.id;
-          option.text = node.id;
-          sourcePersonSelect.appendChild(option);
-          targetPersonSelect.appendChild(option.cloneNode(true));
-        });
+        return {
+          fx: (-forceMagnitude * dx) / r,
+          fy: (-forceMagnitude * dy) / r,
+        };
       }
 
-      updatePersonSelects();
+      function updateParticle() {
+        const force = calculateForce(particle.x, particle.y);
+        particle.ax = force.fx / particle.mass;
+        particle.ay = force.fy / particle.mass;
 
-      addPersonButton.addEventListener("click", () => {
-        const newPerson = addPersonInput.value.trim();
-        if (newPerson) {
-          data.nodes.push({ id: newPerson });
-          updatePersonSelects();
-          addPersonInput.value = "";
-          restartSimulation();
+        particle.vx += particle.ax * dt;
+        particle.vy += particle.ay * dt;
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+
+        trail.push({ x: particle.x, y: particle.y });
+        if (trail.length > 500) {
+          trail.shift();
         }
-        console.log(data);
-      });
+      }
 
-      addRelationButton.addEventListener("click", () => {
-        const sourcePerson = sourcePersonSelect.value;
-        const targetPerson = targetPersonSelect.value;
-        if (sourcePerson && targetPerson && sourcePerson !== targetPerson) {
-          const existingRelation = data.links.find(
-            (link) =>
-              (link.source === sourcePerson && link.target === targetPerson) ||
-              (link.source === targetPerson && link.target === sourcePerson)
-          );
-          if (!existingRelation) {
-            data.links.push({ source: sourcePerson, target: targetPerson });
-            restartSimulation();
-          } else {
-            alert("This relation already exists.");
+      function drawArrow(fromx, fromy, tox, toy) {
+        const headlen = 10;
+        const dx = tox - fromx;
+        const dy = toy - fromy;
+        const angle = Math.atan2(dy, dx);
+        ctx.beginPath();
+        ctx.moveTo(fromx, fromy);
+        ctx.lineTo(tox, toy);
+        ctx.lineTo(
+          tox - headlen * Math.cos(angle - Math.PI / 6),
+          toy - headlen * Math.sin(angle - Math.PI / 6)
+        );
+        ctx.moveTo(tox, toy);
+        ctx.lineTo(
+          tox - headlen * Math.cos(angle + Math.PI / 6),
+          toy - headlen * Math.sin(angle + Math.PI / 6)
+        );
+        ctx.stroke();
+      }
+
+      function drawVectorField() {
+        const step = 40;
+        ctx.strokeStyle = "rgba(0, 0, 255, 0.2)";
+        for (let x = 0; x < canvas.width; x += step) {
+          for (let y = 0; y < canvas.height; y += step) {
+            const force = calculateForce(x, y);
+            const magnitude = Math.sqrt(
+              force.fx * force.fx + force.fy * force.fy
+            );
+            const scale = 15 / magnitude;
+
+            drawArrow(x, y, x + force.fx * scale, y + force.fy * scale);
           }
         }
+      }
+
+      function drawParticle() {
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+        ctx.beginPath();
+        trail.forEach((point, index) => {
+          if (index === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      function animate() {
+        if (!running) return;
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawVectorField();
+        updateParticle();
+        drawParticle();
+
+        requestAnimationFrame(animate);
+      }
+
+      startStopButton.addEventListener("click", () => {
+        running = !running;
+        if (running) {
+          initializeSimulation();
+          requestAnimationFrame(animate);
+        }
       });
 
-      function restartSimulation() {
-        simulation.stop();
-        // Instead of removing and re-adding, update the existing elements
-        simulation.nodes(data.nodes);
-        simulation.force("link").links(data.links);
+      massSlider.addEventListener("input", initializeSimulation);
+      velocitySlider.addEventListener("input", initializeSimulation);
+      forceConstantSlider.addEventListener("input", initializeSimulation);
 
-        // Update links
-        link = link.data(data.links);
-        link.exit().remove(); // Remove any extra links
-        link = link
-          .enter()
-          .append("line")
-          .attr("stroke", "#999")
-          .attr("stroke-width", 1.5)
-          .merge(link); // Merge new links with existing ones
+      initializeSimulation();
+      drawVectorField();
+      drawParticle();
 
-        // Update nodes
-        node = node.data(data.nodes);
-        node.exit().remove(); // Remove any extra nodes
-        node = node
-          .enter()
-          .append("circle")
-          .attr("r", 8)
-          .attr("class", "node")
-          .merge(node); // Merge new nodes with existing ones
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
 
-        // Update labels
-        label = label.data(data.nodes);
-        label.exit().remove(); // Remove any extra labels
-        label = label
-          .enter()
-          .append("text")
-          .attr("class", "label")
-          .text((d) => d.id)
-          .merge(label); // Merge new labels with existing ones
-
-        // Restart the simulation and re-attach the ticked function
-        simulation.alpha(1).restart();
-        simulation.on("tick", ticked);
-      }
+      window.particle = particle;
     </script>
   </body>
 </html>

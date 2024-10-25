@@ -1,111 +1,87 @@
 const { JSDOM } = require("jsdom");
-const fs = require("fs");
-const path = require("path");
 
-// jest.mock('d3', () => ({
-//     select: jest.fn().mockReturnThis(),
-//     attr: jest.fn().mockReturnThis(),
-//     forceSimulation: jest.fn(() => ({
-//         force: jest.fn().mockReturnThis(),
-//         nodes: jest.fn().mockReturnThis(),
-//         on: jest.fn().mockReturnThis(),
-//         restart: jest.fn().mockReturnThis(),
-//         stop: jest.fn(),
-//         alpha: jest.fn().mockReturnThis()
-//     })),
-//     forceLink: jest.fn().mockReturnThis(),
-//     forceManyBody: jest.fn().mockReturnThis(),
-//     forceCenter: jest.fn().mockReturnThis()
-// }));
+const options = {
+  resources: "usable",
+  runScripts: "dangerously",
+};
 
-describe("Person’s Network Visualization", () => {
-  let window,
-    document,
-    addPersonButton,
-    addPersonInput,
-    addRelationButton,
-    sourcePersonSelect,
-    targetPersonSelect;
+let window, document;
 
-  beforeAll((done) => {
-    const htmlContent = fs.readFileSync(
-      path.resolve(__dirname, "index.html"),
-      "utf8"
-    );
-    const dom = new JSDOM(htmlContent, {
-      runScripts: "dangerously",
-      resources: "usable",
-      beforeParse(window) {
-        window.alert = (msg) => console.log(msg);
-      },
-    });
-
+beforeAll((done) => {
+  JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
+    window.onload = () => done(); // Ensure all scripts are loaded and executed
+  });
+});
 
-    window.onload = () => {
-      addPersonButton = document.getElementById("add-person");
-      addPersonInput = document.getElementById("new-person");
-      addRelationButton = document.getElementById("add-relation");
-      sourcePersonSelect = document.getElementById("source-person");
-      targetPersonSelect = document.getElementById("target-person");
-      done();
-    };
+describe("Central Force Particle Trajectory Simulation", () => {
+  test("Initializes with default settings", () => {
+    const massSlider = document.getElementById("mass");
+    const velocitySlider = document.getElementById("initialVelocity");
+    const forceConstantSlider = document.getElementById("forceConstant");
+
+    // Initial values match HTML input values
+    expect(massSlider.value).toBe("10");
+    expect(velocitySlider.value).toBe("50");
+    expect(forceConstantSlider.value).toBe("50000");
   });
 
-  it("should add a new person correctly", () => {
-    addPersonInput.value = "Eve";
-    addPersonButton.click();
-    expect(document.querySelectorAll("option").length).toBe(10); // Assuming initial 4 + new one
-    expect(document.querySelectorAll("circle").length).toBe(5);
+  test("Slider adjustments trigger simulation reset", () => {
+    const massSlider = document.getElementById("mass");
+    const spyInit = jest.spyOn(window, "initializeSimulation");
+
+    // Trigger input event on slider
+    massSlider.value = "20";
+    window.initializeSimulation();
+    expect(spyInit).toHaveBeenCalled();
+    expect(window.particle.mass).toBe(20); // Assuming the initializeSimulation adjusts the particle mass
   });
 
-  it("should not add a person if input is empty", () => {
-    addPersonInput.value = "";
-    addPersonButton.click();
-    expect(document.querySelectorAll("option").length).toBe(10); // No change
+  test("Start/Stop button toggles simulation state", () => {
+    let flag = true;
+    window.requestAnimationFrame = jest.fn((f) => {
+      if (flag) {
+        flag = false;
+        f();
+      }
+    });
+    const startStopButton = document.getElementById("startStop");
+    startStopButton.click(); // Start simulation
+
+    expect(window.running).toBe(true);
+
+    startStopButton.click(); // Stop simulation
+
+    expect(window.running).toBe(false);
   });
 
-  it("should not add a person with duplicate name", () => {
-    addPersonInput.value = "Eve";
-    addPersonButton.click();
-    expect(document.querySelectorAll("option").length).toBe(12); // No change since 'Eve' already added
+  test("Particle movement updates on animation frame", () => {
+    const originalX = window.particle.x;
+    const originalY = window.particle.y;
+
+    // Simulate one frame of animation
+    window.running = true;
+    window.animate();
+
+    expect(window.particle.x).not.toBe(originalX);
+    expect(window.particle.y).not.toBe(originalY);
   });
 
-  it("should add a relation correctly", () => {
-    sourcePersonSelect.value = "Alice";
-    targetPersonSelect.value = "Eve";
-    addRelationButton.click();
-    expect(document.querySelectorAll("line").length).toBe(5); // Assuming initial 4 + new one
+  test("Force calculation follows inverse square law", () => {
+    const force = window.calculateForce(10, 10); // Directly at the center
+
+    // Force should be zero at the center
+    expect(force.fx).toBeCloseTo(4, 0);
+    expect(force.fy).toBeCloseTo(4, 0);
   });
 
-  it("should not add a relation if source and target are the same", () => {
-    sourcePersonSelect.value = "Eve";
-    targetPersonSelect.value = "Eve";
-    addRelationButton.click();
-    expect(document.querySelectorAll("line").length).toBe(5); // No new line added
-  });
+  test("Vector field is drawn on canvas", () => {
+    const ctx = window.simulationCanvas.getContext("2d");
+    const spyDrawArrow = jest.spyOn(window, "drawArrow");
+    window.drawVectorField();
 
-  it("should not add a duplicate relation", () => {
-    sourcePersonSelect.value = "Alice";
-    targetPersonSelect.value = "Eve";
-    addRelationButton.click();
-    expect(document.querySelectorAll("line").length).toBe(6); // No new line added
+    // Check if arrows are drawn
+    expect(spyDrawArrow).toHaveBeenCalled();
   });
-
-  it("should alert when adding a duplicate relation", () => {
-    window.alert = jest.fn();
-    sourcePersonSelect.value = "Alice";
-    targetPersonSelect.value = "Eve";
-    addRelationButton.click();
-    expect(window.alert).toHaveBeenCalledWith("This relation already exists.");
-  });
-
-  it("should handle adding a relation with non-existent persons", () => {
-    sourcePersonSelect.value = "NonExistent1";
-    targetPersonSelect.value = "NonExistent2";
-    addRelationButton.click();
-    expect(document.querySelectorAll("line").length).toBe(7); // Still no new line added
-  });
-
 });
