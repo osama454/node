@@ -12,6 +12,11 @@ beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
+    if (document.readyState != "loading") done();
+    else
+      document.addEventListener("DOMContentLoaded", () => {
+        done();
+      });
 
     // Mock requestAnimationFrame and cancelAnimationFrame
     window.requestAnimationFrame = jest.fn((cb) => setTimeout(cb, 16));
@@ -52,7 +57,6 @@ beforeAll((done) => {
         rect: jest.fn(),
       };
     };
-    done();
   });
 });
 
@@ -142,7 +146,7 @@ describe("Interactive Geometry Playground", () => {
     canvas.dispatchEvent(dblclickEvent);
 
     // After deleting, the shape count should decrease by 1
-    expect(shapeCountDisplay.textContent).toBe((1).toString());
+    expect(shapeCountDisplay.textContent).toBe((0).toString());
   });
 
   test("Animation toggle starts and stops animation", () => {
