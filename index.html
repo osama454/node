@@ -27,10 +27,12 @@
       <button id="add-relation">Add Relation</button>
     </div>
     <script>
+      // Select the SVG area and set the dimensions
       const svg = d3.select("svg");
-      const width = svg.attr("width");
-      const height = svg.attr("height");
+      const width = +svg.attr("width");
+      const height = +svg.attr("height");
 
+      // Define the data structure for nodes and links
       const data = {
         nodes: [
           { id: "Alice" },
@@ -46,6 +48,7 @@
         ],
       };
 
+      // Initialize the simulation with forces
       const simulation = d3
         .forceSimulation(data.nodes)
         .force(
@@ -58,6 +61,7 @@
         .force("charge", d3.forceManyBody().strength(-400))
         .force("center", d3.forceCenter(width / 2, height / 2));
 
+      // Create links, nodes, and labels and append them to the SVG
       let link = svg
         .append("g")
         .selectAll("line")
@@ -85,6 +89,7 @@
         .attr("class", "label")
         .text((d) => d.id);
 
+      // Function to update graphical elements during simulation tick
       function ticked() {
         link
           .attr("x1", (d) => d.source.x)
@@ -99,13 +104,10 @@
 
       simulation.on("tick", ticked);
 
-      const addPersonButton = document.getElementById("add-person");
-      const addPersonInput = document.getElementById("new-person");
-      const addRelationButton = document.getElementById("add-relation");
-      const sourcePersonSelect = document.getElementById("source-person");
-      const targetPersonSelect = document.getElementById("target-person");
-
+      // Update dropdowns for selecting source and target persons
       function updatePersonSelects() {
+        const sourcePersonSelect = document.getElementById("source-person");
+        const targetPersonSelect = document.getElementById("target-person");
         sourcePersonSelect.innerHTML = "";
         targetPersonSelect.innerHTML = "";
         data.nodes.forEach((node) => {
@@ -119,26 +121,30 @@
 
       updatePersonSelects();
 
-      addPersonButton.addEventListener("click", () => {
-        const newPerson = addPersonInput.value.trim();
-        if (newPerson) {
+      // Event listener to add a new person
+      document.getElementById("add-person").addEventListener("click", () => {
+        const newPerson = document.getElementById("new-person").value.trim();
+        if (newPerson && !data.nodes.some((n) => n.id === newPerson)) {
           data.nodes.push({ id: newPerson });
           updatePersonSelects();
-          addPersonInput.value = "";
+          document.getElementById("new-person").value = "";
           restartSimulation();
         }
-        console.log(data);
       });
 
-      addRelationButton.addEventListener("click", () => {
-        const sourcePerson = sourcePersonSelect.value;
-        const targetPerson = targetPersonSelect.value;
+      // Event listener to add a new relation
+      document.getElementById("add-relation").addEventListener("click", () => {
+        const sourcePerson = document.getElementById("source-person").value;
+        const targetPerson = document.getElementById("target-person").value;
         if (sourcePerson && targetPerson && sourcePerson !== targetPerson) {
-          const existingRelation = data.links.find(
-            (link) =>
-              (link.source === sourcePerson && link.target === targetPerson) ||
-              (link.source === targetPerson && link.target === sourcePerson)
-          );
+          const existingRelation = data.links.find((link) => {
+            return (
+              (link.source.id === sourcePerson &&
+                link.target.id === targetPerson) ||
+              (link.source.id === targetPerson &&
+                link.target.id === sourcePerson)
+            );
+          });
           if (!existingRelation) {
             data.links.push({ source: sourcePerson, target: targetPerson });
             restartSimulation();
@@ -148,43 +154,41 @@
         }
       });
 
+      // Function to restart the simulation with updated data
       function restartSimulation() {
         simulation.stop();
-        // Instead of removing and re-adding, update the existing elements
-        simulation.nodes(data.nodes);
-        simulation.force("link").links(data.links);
 
-        // Update links
+        // Update the data bindings for links, nodes, and labels
         link = link.data(data.links);
-        link.exit().remove(); // Remove any extra links
+        link.exit().remove();
         link = link
           .enter()
           .append("line")
+          .merge(link)
           .attr("stroke", "#999")
-          .attr("stroke-width", 1.5)
-          .merge(link); // Merge new links with existing ones
+          .attr("stroke-width", 1.5);
 
-        // Update nodes
         node = node.data(data.nodes);
-        node.exit().remove(); // Remove any extra nodes
+        node.exit().remove();
         node = node
           .enter()
           .append("circle")
+          .merge(node)
           .attr("r", 8)
-          .attr("class", "node")
-          .merge(node); // Merge new nodes with existing ones
+          .attr("class", "node");
 
-        // Update labels
         label = label.data(data.nodes);
-        label.exit().remove(); // Remove any extra labels
+        label.exit().remove();
         label = label
           .enter()
           .append("text")
+          .merge(label)
           .attr("class", "label")
-          .text((d) => d.id)
-          .merge(label); // Merge new labels with existing ones
+          .text((d) => d.id);
 
-        // Restart the simulation and re-attach the ticked function
+        // Restart the simulation with updated forces
+        simulation.nodes(data.nodes);
+        simulation.force("link").links(data.links);
         simulation.alpha(1).restart();
         simulation.on("tick", ticked);
       }

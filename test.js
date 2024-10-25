@@ -2,22 +2,6 @@ const { JSDOM } = require("jsdom");
 const fs = require("fs");
 const path = require("path");
 
-// jest.mock('d3', () => ({
-//     select: jest.fn().mockReturnThis(),
-//     attr: jest.fn().mockReturnThis(),
-//     forceSimulation: jest.fn(() => ({
-//         force: jest.fn().mockReturnThis(),
-//         nodes: jest.fn().mockReturnThis(),
-//         on: jest.fn().mockReturnThis(),
-//         restart: jest.fn().mockReturnThis(),
-//         stop: jest.fn(),
-//         alpha: jest.fn().mockReturnThis()
-//     })),
-//     forceLink: jest.fn().mockReturnThis(),
-//     forceManyBody: jest.fn().mockReturnThis(),
-//     forceCenter: jest.fn().mockReturnThis()
-// }));
-
 describe("Person’s Network Visualization", () => {
   let window,
     document,
@@ -69,7 +53,7 @@ describe("Person’s Network Visualization", () => {
   it("should not add a person with duplicate name", () => {
     addPersonInput.value = "Eve";
     addPersonButton.click();
-    expect(document.querySelectorAll("option").length).toBe(12); // No change since 'Eve' already added
+    expect(document.querySelectorAll("option").length).toBe(10); // No change since 'Eve' already added
   });
 
   it("should add a relation correctly", () => {
@@ -90,7 +74,7 @@ describe("Person’s Network Visualization", () => {
     sourcePersonSelect.value = "Alice";
     targetPersonSelect.value = "Eve";
     addRelationButton.click();
-    expect(document.querySelectorAll("line").length).toBe(6); // No new line added
+    expect(document.querySelectorAll("line").length).toBe(5); // No new line added
   });
 
   it("should alert when adding a duplicate relation", () => {
@@ -105,7 +89,6 @@ describe("Person’s Network Visualization", () => {
     sourcePersonSelect.value = "NonExistent1";
     targetPersonSelect.value = "NonExistent2";
     addRelationButton.click();
-    expect(document.querySelectorAll("line").length).toBe(7); // Still no new line added
+    expect(document.querySelectorAll("line").length).toBe(5); // Still no new line added
   });
-
 });
