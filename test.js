@@ -1,54 +1,49 @@
 /// <reference types="jest" />
 
-const { JSDOM } = require("jsdom");
+const puppeteer = require("puppeteer");
 
-let /** @type {Window} */ window, /** @type {Document} */ document;
-/** @type {HTMLElement} */
-let /** @type {HTMLElement} */ button, /** @type {HTMLElement} */ out;
+let browser;
+let page;
+let ev;
 
-function set() {
-  button = document.getElementById("button");
-  out = document.getElementById("out");
-}
-function reset(done) {
-  JSDOM.fromFile("index.html", {
-    resources: "usable",
-    runScripts: "dangerously",
-  }).then((dom) => {
-    window = dom.window;
-    document = window.document;
 
-    if (document.readyState != "loading") {
-      set();
-      done();
-    } else
-      document.addEventListener("DOMContentLoaded", () => {
-        set();
-        done();
-      });
+let /** @type {HTMLElement} */button, /** @type {HTMLElement} */out;
+
+async function reset() {
+  browser = await puppeteer.launch({ headless: true });
+  page = await browser.newPage();
+  await page.goto("file:///D:/work/node/index.html");
+  ev = page.evaluate.bind(page);
+  await ev(() => {
+    button = document.getElementById("button");
+    out = document.getElementById("out");
+    // Mock variables that needs to be accessed on the unit test here. e.g. `window.variable = init_state;`
   });
 }
 
 describe("Group 1", () => {
-  beforeAll((done) => {
-    reset(done);
-  });
-  it("Test 1", () => {
-    console.log(out.innerHTML);
-    expect(out.innerHTML).toBe("0");
+  beforeAll(async () => {
+    await reset();
   });
 
-  it("Test 2", () => {
-    button.click();
-    expect(out.innerHTML).toBe("1");
+  it("should get the inner text of #out element", async () => {
+    const text = await ev(() => out.innerText);
+    expect(text).toBe("0");
+  });
+  it("", async () => {
+    await ev(() => button.click());
+    const text = await ev(() => out.innerText);
+    expect(text).toBe("1");
   });
 });
 
-describe("Group 2", () => {
-  beforeAll((done) => {
-    reset(done);
+describe("Group 1", () => {
+  beforeAll(async () => {
+    await reset();
   });
-  it("Test 1", () => {
-    expect(out.innerHTML).toBe("0");
+
+  it("should get the inner text of #out element", async () => {
+    const text = await ev(() => out.innerText);
+    expect(text).toBe("0");
   });
 });
