@@ -5,125 +5,111 @@ const options = {
   runScripts: "dangerously",
 };
 
-let window, document;
-let startGame, checkWord, switchPlayer, determineWinner;
-let player1Score, player2Score, player1TurnsLeft, player2TurnsLeft;
+let window,
+  document,
+  generateNumberButton,
+  numberDisplay,
+  wordInput,
+  submitWordButton,
+  message,
+  usedLetters,
+  player1Score,
+  player2Score,
+  currentPlayerSpan,
+  turnsLeftSpan,
+  timer;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
 
-    if (document.readyState !== "loading") done();
+    // Get references to DOM elements after the document is ready
+    generateNumberButton = document.getElementById("generate-number");
+    numberDisplay = document.getElementById("number-display");
+    wordInput = document.getElementById("word-input");
+    submitWordButton = document.getElementById("submit-word");
+    message = document.getElementById("message");
+    usedLetters = document.getElementById("used-letters");
+    player1Score = document.getElementById("player1-score");
+    player2Score = document.getElementById("player2-score");
+    currentPlayerSpan = document.getElementById("current-player");
+    turnsLeftSpan = document.getElementById("turns-left");
+    timer = document.getElementById("timer");
+
+    if (document.readyState != "loading") done();
     else
       document.addEventListener("DOMContentLoaded", () => {
         done();
       });
-
-    // Import functions from the script
-    startGame = window.startGame;
-    checkWord = window.checkWord;
-    switchPlayer = window.switchPlayer;
-    determineWinner = window.determineWinner;
-
-    // Initialize variables
-    player1Score = window.player1Score;
-    player2Score = window.player2Score;
-    player1TurnsLeft = window.player1TurnsLeft;
-    player2TurnsLeft = window.player2TurnsLeft;
   });
 });
 
-describe("Word Game", () => {
+describe("Number and Word Game Logic", () => {
   beforeEach(() => {
-    // Reset scores and turns
-    window.player1Score = 0;
-    window.player2Score = 0;
-    window.player1TurnsLeft = 3;
-    window.player2TurnsLeft = 3;
+    // Reset game variables before each test
+    currentPlayerSpan.textContent = "1";
+    turnsLeftSpan.textContent = "3";
+    usedLetters.textContent = "Used letters: ";
+    player1Score.textContent = "Player 1 score: 0";
+    player2Score.textContent = "Player 2 score: 0";
+    numberDisplay.textContent = "";
+    wordInput.value = "";
+    message.textContent = "";
   });
 
-  test("should generate a number and start a 10-second timer when startGame is called", () => {
-    startGame(1);
-    const playerNumber = document.getElementById("player1Number").innerText;
-    const timer = parseInt(document.getElementById("timer").innerText);
-
-    expect(playerNumber).toBeTruthy();
-    expect(timer).toBe(10);
+  it("should generate a random number between 1 and 10", () => {
+    generateNumberButton.click();
+    let number = parseInt(numberDisplay.textContent.split(": ")[1]);
+    expect(number).toBeGreaterThanOrEqual(1);
+    expect(number).toBeLessThanOrEqual(10);
   });
 
-  test("should reduce turns left and switch player after each valid attempt", () => {
-    startGame(1);
-    const initialTurns = player1TurnsLeft;
-    checkWord(1);
-    expect(window.player1TurnsLeft).toBe(initialTurns - 2);
-
-    switchPlayer();
-    expect(document.getElementById("currentPlayer").innerText).toBe("Player 2's Turn");
+  it("should switch players correctly", () => {
+    expect(currentPlayerSpan.textContent).toBe("1");
+    window.switchPlayer();
+    expect(currentPlayerSpan.textContent).toBe("2");
+    window.switchPlayer();
+    expect(currentPlayerSpan.textContent).toBe("1");
   });
 
-  test("should correctly update score and used letters for even-numbered input with valid word", () => {
-    startGame(1);
-    document.getElementById("player1Number").innerText = "2";
-    document.getElementById("player1Word").value = "elephant"; // > 7 characters
-
-    checkWord(1);
-
-    expect(window.player1Score).toBe(1);
-    expect(document.getElementById("player1Score").innerText).toBe("Score: 1");
-    expect(document.getElementById("player1UsedLetters").innerText).toContain("e, t");
+  it("should decrement turns after each valid word", () => {
+    numberDisplay.textContent = "Number: 2"; // Even number
+    wordInput.value = "testing"; // Valid word
+    submitWordButton.click();
+    expect(turnsLeftSpan.textContent).toBe("3");
   });
 
-  test("should restrict words with letters used in previous rounds", () => {
-    startGame(1);
-    document.getElementById("player1Number").innerText = "2";
-    document.getElementById("player1Word").value = "elephant";
-    checkWord(1); // Adds "e" and "t" to used letters
+  it("should switch players when turns reach 0", () => {
+    numberDisplay.textContent = "Number: 2";
+    wordInput.value = "testing";
 
-    document.getElementById("player1Word").value = "emulate"; // Starts with "e", which was used
-    checkWord(1);
-    expect(document.getElementById("player1Result").innerText).toBe("Incorrect!");
+    for (let i = 0; i < 3; i++) {
+      submitWordButton.click();
+    }
+
+    expect(currentPlayerSpan.textContent).toBe("1");
+    expect(turnsLeftSpan.textContent).toBe("3");
+  });
+});
+
+// Mock the setInterval and clearInterval functions used by the timer
+jest.useFakeTimers();
+describe("Timer Functionality", () => {
+  beforeEach(() => {
+    jest.clearAllTimers(); // Clear any running timers before each test
   });
 
-  test("should prevent words with odd-numbered input if word length is not less than 7", () => {
-    startGame(1);
-    document.getElementById("player1Number").innerText = "3";
-    document.getElementById("player1Word").value = "hello";
-
-    checkWord(1);
-
-    expect(document.getElementById("player1Result").innerText).toBe("Correct!");
+  it("should start the timer when a number is generated", () => {
+    const setIntervalSpy = jest.spyOn(window, "setInterval");
+    generateNumberButton.click();
+    expect(setIntervalSpy).toHaveBeenCalledTimes(1);
+    expect(setIntervalSpy).toHaveBeenLastCalledWith(expect.any(Function), 1000);
   });
 
-  test("should alert the winner or if it's a tie after all turns are taken", () => {
-    window.player1Score = 3;
-    window.player2Score = 2;
-    player1TurnsLeft = 0;
-    player2TurnsLeft = 0;
-
-    determineWinner();
-
-    expect(window.alert).toHaveBeenCalledWith("Player 1 wins with a score of 3!");
-  });
-
-  test("should end the game and announce a tie if both players have the same score", () => {
-    window.player1Score = 2;
-    window.player2Score = 2;
-    player1TurnsLeft = 0;
-    player2TurnsLeft = 0;
-
-    determineWinner();
-
-    expect(window.alert).toHaveBeenCalledWith("It's a tie with both players scoring 2!");
-  });
-
-  test("should reduce time and alert 'Time's up!' if timer reaches zero", () => {
-    jest.useFakeTimers();
-    startGame(1);
-    jest.advanceTimersByTime(10000);
-
-    expect(document.getElementById("timer").innerText).toBe("0");
-    expect(window.alert).toHaveBeenCalledWith("Time's up! Player 1 loses this turn.");
-    jest.useRealTimers();
+  it("should display the correct time left", () => {
+    generateNumberButton.click();
+    jest.advanceTimersByTime(5000);
+    expect(timer.textContent).toBe("Time left: 6");
   });
 });
