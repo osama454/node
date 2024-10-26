@@ -2,10 +2,6 @@
 
 const { JSDOM } = require("jsdom");
 
-const options = {
-  resources: "usable",
-  runScripts: "dangerously",
-};
 let /** @type {Window} */ window, /** @type {Document} */ document;
 /** @type {HTMLElement} */
 let /** @type {HTMLElement} */ button, /** @type {HTMLElement} */ out;
@@ -15,7 +11,10 @@ function set() {
   out = document.getElementById("out");
 }
 function reset(done) {
-  JSDOM.fromFile("index.html", options).then((dom) => {
+  JSDOM.fromFile("index.html", {
+    resources: "usable",
+    runScripts: "dangerously",
+  }).then((dom) => {
     window = dom.window;
     document = window.document;
 
