@@ -1,61 +1,31 @@
-const modal = document.getElementById('my-modal');
-const select = document.getElementById('direction-select');
+const modal = document.getElementById('modal'); // Access the modal element
+const dropdown = document.getElementById('directionDropdown'); // Access the dropdown element
 
-let isDragging = false;
-let offsetX, offsetY;
+// Set initial position
+modal.style.top = '50%'; // Centers modal vertically
+modal.style.left = '50%'; // Centers modal horizontally
+modal.style.transform = 'translate(-50%, -50%)'; // Offsets modal to be exactly centered
 
-// Make the modal draggable
-modal.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - modal.offsetLeft;
-    offsetY = e.clientY - modal.offsetTop;
+dropdown.addEventListener('change', () => { // Triggers movement on dropdown change
+  const direction = dropdown.value; // Gets selected direction
+  const currentLeft = parseFloat(modal.style.left) || 50; // Gets current left position as a percentage
+  const currentTop = parseFloat(modal.style.top) || 50; // Gets current top position as a percentage
+  const step = 10; // Step size for movement in percentage
+
+  switch (direction) {
+    case 'up':
+      modal.style.top = Math.max(0, currentTop - step) + '%'; // Moves modal up with boundary check
+      break;
+    case 'down':
+      modal.style.top = Math.min(100, currentTop + step) + '%'; // Moves modal down with boundary check
+      break;
+    case 'left':
+      modal.style.left = Math.max(0, currentLeft - step) + '%'; // Moves modal left with boundary check
+      break;
+    case 'right':
+      modal.style.left = Math.min(100, currentLeft + step) + '%'; // Moves modal right with boundary check
+      break;
+  }
+  
+  dropdown.value = ''; // Resets dropdown selection
 });
-
-document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-
-    let x = e.clientX - offsetX;
-    let y = e.clientY - offsetY;
-
-    // Keep the modal within the screen bounds
-    x = Math.max(0, Math.min(x, window.innerWidth - modal.offsetWidth));
-    y = Math.max(0, Math.min(y, window.innerHeight - modal.offsetHeight));
-
-    modal.style.left = x + 'px';
-    modal.style.top = y + 'px';
-});
-
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-});
-
-// Handle direction selection
-select.addEventListener('change', () => {
-    const direction = select.value;
-    moveModal(direction);
-    select.value = ''; // Reset the dropdown
-});
-
-function moveModal(direction) {
-    let x = modal.offsetLeft;
-    let y = modal.offsetTop;
-    const moveAmount = 50;
-
-    switch (direction) {
-        case 'up':
-            y = Math.max(0, y - moveAmount); // Moves modal up by moveAmount if space allows
-            break;
-        case 'down':
-            y = Math.min(y + moveAmount, window.innerHeight - modal.offsetHeight); // Moves modal down, preventing it from going off screen
-            break;
-        case 'left':
-            x = Math.max(0, x - moveAmount); // Moves modal left by moveAmount
-            break;
-        case 'right':
-            x = Math.min(x + moveAmount, window.innerWidth - modal.offsetWidth); // Moves modal right, keeping it within screen bounds
-            break;
-    }
-
-    modal.style.left = x + 'px';
-    modal.style.top = y + 'px';
-}

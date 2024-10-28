@@ -1,36 +1,15 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> <!-- Specifies character encoding for the HTML document -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Sets viewport to make it responsive -->
     <title>Repositionable Modal</title>
-    <style>
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-      }
-
-      .modal {
-        position: absolute;
-        width: 300px;
-        padding: 20px;
-        background-color: white;
-        border: 1px solid black;
-        text-align: center;
-      }
-
-      .modal-header {
-        cursor: move;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="my-modal" class="modal">
-      <div class="modal-header">
-        <h3>Select a direction</h3>
-      </div>
-      <select id="direction-select">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="modal"> <!-- Main modal container -->
+      <h2 id="modalTitle">Select a direction</h2> <!-- Title displayed inside the modal -->
+      <select id="directionDropdown"> <!-- Dropdown for direction selection -->
         <option value="">-- Select --</option>
         <option value="up">Up</option>
         <option value="down">Down</option>
@@ -38,7 +17,6 @@
         <option value="right">Right</option>
       </select>
     </div>
-
     <script src="script.js"></script>
-  </body>
+</body>
 </html>

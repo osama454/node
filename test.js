@@ -5,110 +5,100 @@ const options = {
   runScripts: "dangerously",
 };
 
-let window, document, modal, select, offsetX, offsetY;
-let isDragging = false;
+let window, document, modal, dropdown;
 
 beforeAll((done) => {
   JSDOM.fromFile("index.html", options).then((dom) => {
     window = dom.window;
     document = window.document;
-    modal = document.getElementById("my-modal");
-    select = document.getElementById("direction-select");
-    offsetX = 0;
-    offsetY = 0;
-    if (document.readyState != "loading") done();
+    if (document.readyState !== "loading") done();
     else
       document.addEventListener("DOMContentLoaded", () => {
         done();
       });
+    modal = document.getElementById('modal');
+    dropdown = document.getElementById('directionDropdown');
   });
 });
 
-describe("Repositionable Modal", () => {
+describe("Modal Repositioning", () => {
   beforeEach(() => {
-    // Reset modal position before each test
-    modal.style.left = "0px";
-    modal.style.top = "0px";
-    isDragging = false;
+    // Reset modal position to center for each test
+    modal.style.top = '50%';
+    modal.style.left = '50%';
+    dropdown.value = ''; // Ensure dropdown is reset
   });
 
-  test("Modal should be draggable and stay within bounds", () => {
-    // Simulate mousedown to start dragging
-    modal.dispatchEvent(
-      new window.MouseEvent("mousedown", {
-        clientX: 100,
-        clientY: 100,
-      })
-    );
-    offsetX = 50;
-    offsetY = 50;
-    isDragging = true;
-
-    // Simulate mousemove to drag modal
-    document.dispatchEvent(
-      new window.MouseEvent("mousemove", {
-        clientX: 200,
-        clientY: 200,
-      })
-    );
-
-    // Verify new modal position within bounds
-    expect(parseInt(modal.style.left)).toBeGreaterThanOrEqual(0);
-    expect(parseInt(modal.style.top)).toBeGreaterThanOrEqual(0);
-
-    // Simulate mouseup to stop dragging
-    document.dispatchEvent(new window.MouseEvent("mouseup"));
-    isDragging = false;
+  test("initial position of modal is centered", () => {
+    expect(modal.style.top).toBe("50%");
+    expect(modal.style.left).toBe("50%");
+    expect(modal.style.transform).toBe("translate(-50%, -50%)");
   });
 
-  test("Modal movement for 'up' direction should not exceed screen bounds", () => {
-    select.value = "up";
-    select.dispatchEvent(new window.Event("change"));
-    expect(parseInt(modal.style.top)).toBeGreaterThanOrEqual(0);
+  test("moves modal up within boundaries", () => {
+    dropdown.value = "up";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.top)).toBe(40); // Should decrease by 10%
   });
 
-  test("Modal movement for 'down' direction should not exceed screen bounds", () => {
-    modal.style.top = `${window.innerHeight - modal.offsetHeight}px`;
-    select.value = "down";
-    select.dispatchEvent(new window.Event("change"));
-    expect(parseInt(modal.style.top)).toBeLessThanOrEqual(
-      window.innerHeight - modal.offsetHeight
-    );
+  test("moves modal down within boundaries", () => {
+    dropdown.value = "down";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.top)).toBe(60); // Should increase by 10%
   });
 
-  test("Modal movement for 'left' direction should not exceed screen bounds", () => {
-    select.value = "left";
-    select.dispatchEvent(new window.Event("change"));
-    expect(parseInt(modal.style.left)).toBeGreaterThanOrEqual(0);
+  test("moves modal left within boundaries", () => {
+    dropdown.value = "left";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.left)).toBe(40); // Should decrease by 10%
   });
 
-  test("Modal movement for 'right' direction should not exceed screen bounds", () => {
-    modal.style.left = `${window.innerWidth - modal.offsetWidth}px`;
-    select.value = "right";
-    select.dispatchEvent(new window.Event("change"));
-    expect(parseInt(modal.style.left)).toBeLessThanOrEqual(
-      window.innerWidth - modal.offsetWidth
-    );
+  test("moves modal right within boundaries", () => {
+    dropdown.value = "right";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.left)).toBe(60); // Should increase by 10%
   });
 
-  test("Modal should reset dropdown selection after change", () => {
-    select.value = "right";
-    select.dispatchEvent(new window.Event("change"));
-    expect(select.value).toBe(""); // Verify dropdown resets after movement
+  test("does not move modal up beyond top boundary", () => {
+    modal.style.top = "5%";
+    dropdown.value = "up";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.top)).toBe(0); // Should not go below 0%
   });
 
-  test("Modal should handle no direction selected gracefully", () => {
-    select.value = "";
-    select.dispatchEvent(new window.Event("change"));
-    expect(modal.style.left).toBe("0px");
-    expect(modal.style.top).toBe("0px");
+  test("does not move modal down beyond bottom boundary", () => {
+    modal.style.top = "95%";
+    dropdown.value = "down";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.top)).toBe(100); // Should not exceed 100%
   });
 
-  test("Modal movement should respect the 'moveAmount'", () => {
-    const initialTop = parseInt(modal.style.top) || 0;
-    select.value = "down";
-    select.dispatchEvent(new window.Event("change"));
-    const newTop = parseInt(modal.style.top);
-    expect(newTop - initialTop).toBe(50); // 50 is the defined moveAmount
+  test("does not move modal left beyond left boundary", () => {
+    modal.style.left = "5%";
+    dropdown.value = "left";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.left)).toBe(0); // Should not go below 0%
+  });
+
+  test("does not move modal right beyond right boundary", () => {
+    modal.style.left = "95%";
+    dropdown.value = "right";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(parseFloat(modal.style.left)).toBe(100); // Should not exceed 100%
+  });
+
+  test("resets dropdown value after movement", () => {
+    dropdown.value = "down";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(dropdown.value).toBe("");
+  });
+
+  test("does not move modal if no direction is selected", () => {
+    const initialTop = modal.style.top;
+    const initialLeft = modal.style.left;
+    dropdown.value = "";
+    dropdown.dispatchEvent(new window.Event("change"));
+    expect(modal.style.top).toBe(initialTop);
+    expect(modal.style.left).toBe(initialLeft);
   });
 });
