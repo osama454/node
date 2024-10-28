@@ -9,11 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "jest": "^29.7.0",
-    "puppeteer": "^23.6.0"
-  },
   "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^25.0.1",
     "@babel/preset-env": "^7.25.9",
     "@types/jest": "^29.5.14",
     "babel-jest": "^29.7.0"

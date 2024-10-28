@@ -146,10 +146,16 @@ function checkWord(player) {
 }
 
 function switchPlayer() {
+    // Clear word and number input fields immediately
     document.getElementById(`player${currentPlayer}Word`).value = '';
     document.getElementById(`player${currentPlayer}Number`).innerText = '';
-    document.getElementById(`player${currentPlayer}Result`).innerText = '';
 
+    // Delay clearing the result message to allow users to see "Correct!" or "Incorrect!" feedback
+    setTimeout(() => {
+        document.getElementById(`player${currentPlayer}Result`).innerText = '';
+    }, 1500); // 1.5-second delay
+
+    // Continue with switching logic after the delay
     if (player1TurnsLeft <= 0 && player2TurnsLeft <= 0) {
         clearInterval(timerInterval);
         determineWinner();
@@ -170,6 +176,7 @@ function switchPlayer() {
         startGame(1);
     }
 }
+
 
 function determineWinner() {
     if (player1Score > player2Score) {
