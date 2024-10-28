@@ -12,7 +12,7 @@ let /** @type {HTMLElement} */ scoreEl, /** @type {NodeListOf<HTMLElement>} */ h
 
 beforeAll(() => {
   jest.useFakeTimers(); // Use fake timers for time manipulation
-  
+
 });
 
 function set() {
