@@ -7,10 +7,10 @@
   <style>
     body {
       font-family: sans-serif;
-      display: flex;
+      display: flex; /* Center elements vertically */
       flex-direction: column;
       align-items: center;
-      background-color: #e0f2f7;
+      background-color: #e0f2f7; /* Background color for entire page */
     }
 
     h1 {
@@ -18,15 +18,12 @@
     }
 
     canvas {
-      background-color: #a4d3ee;
-      border: 2px solid #3f51b5;
-      touch-action: none;
-      margin-left: 50px;
-      /* Space for row numbers */
-      margin-top: 20px;
-      /* Adjusted margin to make room for the title */
-      margin-right: 20px;
-      /* Additional space on the right */
+      background-color: #a4d3ee; /* Canvas background color */
+      border: 2px solid #3f51b5; /* Canvas border color and thickness */
+      touch-action: none; /* Prevents touch interactions */
+      margin-left: 50px; /* Space for row numbers */
+      margin-top: 20px; /* Adjusted margin to make room for the title */
+      margin-right: 20px; /* Additional space on the right */
     }
 
     .controls {
@@ -37,9 +34,9 @@
 
     select,
     button {
-      padding: 5px;
-      border: 1px solid #3f51b5;
-      border-radius: 3px;
+      padding: 5px; /* Padding inside select and button */
+      border: 1px solid #3f51b5; /* Border color and thickness */
+      border-radius: 3px; /* Rounded corners for select and button */
     }
 
     .message {
@@ -59,12 +56,12 @@
 <body>
   <h1>Naval Battle</h1>
 
-  <canvas id="battlefield" width="600" height="350"></canvas>
+  <canvas id="battlefield" width="600" height="350"></canvas> <!-- ID and size for canvas -->
 
   <div class="controls">
     <label for="row">Row:</label>
     <select id="row">
-            <option value="1">1</option>
+            <option value="1">1</option> <!-- Starting option value from 1 -->
             <option value="2">2</option>
             <option value="3">3</option>
             <option value="4">4</option>
@@ -73,7 +70,7 @@
 
     <label for="col">Column:</label>
     <select id="col">
-            <option value="A">A</option>
+            <option value="A">A</option> <!-- Option values are letters instead of numbers -->
             <option value="B">B</option>
             <option value="C">C</option>
             <option value="D">D</option>
@@ -85,259 +82,259 @@
             <option value="J">J</option>
         </select>
 
-    <button id="fireButton">Fire!</button>
+    <button id="fireButton">Fire!</button> <!-- Button ID and label text -->
   </div>
 
   <div class="message"></div>
   <div class="timer"></div>
 
   <script>
-    const canvas = document.getElementById('battlefield');
-        const ctx = canvas.getContext('2d');
-        const rowSelect = document.getElementById('row');
-        const colSelect = document.getElementById('col');
-        const fireButton = document.getElementById('fireButton');
-        const messageDiv = document.querySelector('.message');
-        const timerDiv = document.querySelector('.timer');
+    const canvas = document.getElementById('battlefield'); // Updated ID for canvas
+    const ctx = canvas.getContext('2d');
+    const rowSelect = document.getElementById('row'); // Storing row select element
+    const colSelect = document.getElementById('col'); // Storing column select element
+    const fireButton = document.getElementById('fireButton'); // Storing fire button
+    const messageDiv = document.querySelector('.message'); // Message area with class selector
+    const timerDiv = document.querySelector('.timer'); // Timer display with class selector
 
-        const boardSize = {rows: 5, cols: 10};
-        let cellSize = (canvas.width - 50 - 20) / boardSize.cols; // Adjust considering margins
-        const shipTypes = [
-            {name: 'Battleship', size: {rows: 1, cols: 3}},
-            {name: 'Cruiser', size: {rows: 2, cols: 1}},
-            {name: 'Submarine', size: {rows: 1, cols: 1}}
-        ];
+    const boardSize = {rows: 5, cols: 10};
+    let cellSize = (canvas.width - 50 - 20) / boardSize.cols; // Adjust size considering canvas margins
+    const shipTypes = [
+        {name: 'Battleship', size: {rows: 1, cols: 3}}, // Battleship defined by rows and columns size
+        {name: 'Cruiser', size: {rows: 2, cols: 1}}, // Cruiser size
+        {name: 'Submarine', size: {rows: 1, cols: 1}} // Submarine size
+    ];
 
-        let board = [];
-        let ships = [];
-        let playerScore = 0;
-        let gameStarted = false;
-        let gameTimer = null;
-        let timeRemaining = 60; // 1 minute
+    let board = [];
+    let ships = [];
+    let playerScore = 0;
+    let gameStarted = false;
+    let gameTimer = null;
+    let timeRemaining = 60; // Initial game time in seconds
 
-        // Initialize the game board
-        function initBoard() {
-            board = [];
-            for (let i = 0; i < boardSize.rows; i++) {
-                board[i] = new Array(boardSize.cols).fill(0);
-            }
+    // Initialize the game board
+    function initBoard() {
+        board = [];
+        for (let i = 0; i < boardSize.rows; i++) {
+            board[i] = new Array(boardSize.cols).fill(0); // Filling board with water cells
         }
+    }
 
-        // Draw the game board
-        function drawBoard() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw the game board
+    function drawBoard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw the sea with different shades of blue
-            for (let i = 0; i < boardSize.rows; i++) {
-                for (let j = 0; j < boardSize.cols; j++) {
-                    let shade = 150 + Math.floor(Math.random() * 50); // Random shade of blue
-                    let color = `rgb(${shade}, ${shade + 50}, 255)`;
-                    if (board[i][j] === 1) {
-                        color = '#888'; // Hit ship
-                    } else if (board[i][j] === 2) {
-                        color = '#ccc'; // Miss
-                    }
-                    ctx.fillStyle = color;
-                    ctx.fillRect(50 + j * cellSize, 50 + i * cellSize, cellSize, cellSize);
-                    ctx.strokeStyle = '#3f51b5';
-                    ctx.strokeRect(50 + j * cellSize, 50 + i * cellSize, cellSize, cellSize);
-                }
-            }
-
-            // Draw coordinates
-            ctx.font = "16px Arial";
-            ctx.fillStyle = "#000";
-            for (let i = 0; i < boardSize.rows; i++) {
-                ctx.fillText(i + 1, 30, 50 + i * cellSize + cellSize / 2); // Row numbers
-            }
+        // Draw the sea with different shades of blue
+        for (let i = 0; i < boardSize.rows; i++) {
             for (let j = 0; j < boardSize.cols; j++) {
-                ctx.fillText(String.fromCharCode(65 + j), 50 + j * cellSize + cellSize / 2 - 8, 40); // Column letters
+                let shade = 150 + Math.floor(Math.random() * 50); // Random shade for water cells
+                let color = `rgb(${shade}, ${shade + 50}, 255)`;
+                if (board[i][j] === 1) {
+                    color = '#888'; // Color for hit ship
+                } else if (board[i][j] === 2) {
+                    color = '#ccc'; // Color for missed shot
+                }
+                ctx.fillStyle = color;
+                ctx.fillRect(50 + j * cellSize, 50 + i * cellSize, cellSize, cellSize);
+                ctx.strokeStyle = '#3f51b5';
+                ctx.strokeRect(50 + j * cellSize, 50 + i * cellSize, cellSize, cellSize);
             }
         }
 
-        // Place a ship randomly on the board
-        function placeShip(ship) {
-            let placed = false;
-            while (!placed) {
-                let row = Math.floor(Math.random() * boardSize.rows);
-                let col = Math.floor(Math.random() * boardSize.cols);
-                let horizontal = Math.random() < 0.5;
-
-                // Check if the ship fits within the board boundaries
-                if (horizontal && col + ship.size.cols > boardSize.cols) continue;
-                if (!horizontal && row + ship.size.rows > boardSize.rows) continue;
-
-                // Check if the ship overlaps with any existing ships
-                let overlaps = false;
-                for (let i = 0; i < ship.size.rows; i++) {
-                    for (let j = 0; j < ship.size.cols; j++) {
-                        let r = horizontal ? row : row + i;
-                        let c = horizontal ? col + j : col;
-                        if (board[r][c] !== 0) {
-                            overlaps = true;
-                            break;
-                        }
-                    }
-                }
-                if (overlaps) continue;
-
-                // Place the ship on the board
-                for (let i = 0; i < ship.size.rows; i++) {
-                    for (let j = 0; j < ship.size.cols; j++) {
-                        let r = horizontal ? row : row + i;
-                        let c = horizontal ? col + j : col;
-                        board[r][c] = 1;
-                    }
-                }
-                placed = true;
-                ships.push({row, col, horizontal, ...ship});
-            }
+        // Draw row and column coordinates
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#000";
+        for (let i = 0; i < boardSize.rows; i++) {
+            ctx.fillText(i + 1, 30, 50 + i * cellSize + cellSize / 2); // Row numbering
         }
+        for (let j = 0; j < boardSize.cols; j++) {
+            ctx.fillText(String.fromCharCode(65 + j), 50 + j * cellSize + cellSize / 2 - 8, 40); // Column lettering
+        }
+    }
 
-        // Check if the ship is fully sunk
-        function isShipSunk(ship) {
+    // Place a ship randomly on the board
+    function placeShip(ship) {
+        let placed = false;
+        while (!placed) {
+            let row = Math.floor(Math.random() * boardSize.rows);
+            let col = Math.floor(Math.random() * boardSize.cols);
+            let horizontal = Math.random() < 0.5;
+
+            // Check if the ship fits within the board boundaries
+            if (horizontal && col + ship.size.cols > boardSize.cols) continue;
+            if (!horizontal && row + ship.size.rows > boardSize.rows) continue;
+
+            // Check if the ship overlaps with any existing ships
+            let overlaps = false;
             for (let i = 0; i < ship.size.rows; i++) {
                 for (let j = 0; j < ship.size.cols; j++) {
-                    let r = ship.horizontal ? ship.row : ship.row + i;
-                    let c = ship.horizontal ? ship.col + j : ship.col;
-                    if (board[r][c] !== 2) {
-                        return false;
+                    let r = horizontal ? row : row + i;
+                    let c = horizontal ? col + j : col;
+                    if (board[r][c] !== 0) {
+                        overlaps = true;
+                        break;
                     }
                 }
             }
-            return true;
+            if (overlaps) continue;
+
+            // Place the ship on the board
+            for (let i = 0; i < ship.size.rows; i++) {
+                for (let j = 0; j < ship.size.cols; j++) {
+                    let r = horizontal ? row : row + i;
+                    let c = horizontal ? col + j : col;
+                    board[r][c] = 1; // Ship cell marked on board
+                }
+            }
+            placed = true;
+            ships.push({row, col, horizontal, ...ship});
         }
+    }
 
-        // Handle player's shot
-        function fireShot(row, col) {
-            if (board[row][col] === 1) {
-                board[row][col] = 2; // Mark as hit
-                playerScore++;
+    // Check if the ship is fully sunk
+    function isShipSunk(ship) {
+        for (let i = 0; i < ship.size.rows; i++) {
+            for (let j = 0; j < ship.size.cols; j++) {
+                let r = ship.horizontal ? ship.row : ship.row + i;
+                let c = ship.horizontal ? ship.col + j : ship.col;
+                if (board[r][c] !== 2) {
+                    return false; // Ship is not fully sunk
+                }
+            }
+        }
+        return true;
+    }
 
-                let shipHit = ships.find(ship => {
-                    if (ship.horizontal) {
-                        return ship.row === row && col >= ship.col && col < ship.col + ship.size.cols;
-                    } else {
-                        return ship.col === col && row >= ship.row && row < ship.row + ship.size.rows;
-                    }
-                });
+    // Handle player's shot
+    function fireShot(row, col) {
+        if (board[row][col] === 1) {
+            board[row][col] = 2; // Mark cell as hit
+            playerScore++;
 
-                if (shipHit) {
-                    if (isShipSunk(shipHit)) {
-                        messageDiv.textContent = 'Ship Sunk!';
-                    } else {
-                        messageDiv.textContent = 'Nice Shot!';
-                    }
+            let shipHit = ships.find(ship => {
+                if (ship.horizontal) {
+                    return ship.row === row && col >= ship.col && col < ship.col + ship.size.cols;
                 } else {
-                    messageDiv.textContent = 'Nice Shot!';
+                    return ship.col === col && row >= ship.row && row < ship.row + ship.size.rows;
                 }
+            });
 
-                // Check if the player has won
-                const totalShipCells = shipTypes.reduce((sum, ship) => sum + ship.size.rows * ship.size.cols, 0);
-                if (playerScore === totalShipCells) {
-                    clearInterval(gameTimer);
-                    messageDiv.textContent = 'You Win!';
-                    fireButton.disabled = true;
+            if (shipHit) {
+                if (isShipSunk(shipHit)) {
+                    messageDiv.textContent = 'Ship Sunk!'; // Display sunk message
+                } else {
+                    messageDiv.textContent = 'Nice Shot!'; // Display hit message
                 }
-            } else if (board[row][col] === 0) {
-                board[row][col] = 3; // Mark as miss
-                messageDiv.textContent = 'Water!';
+            } else {
+                messageDiv.textContent = 'Nice Shot!';
             }
-            drawBoard();
-        }
 
-        // Start the game countdown
-        function startCountdown() {
-            let count = 5;
+            // Check if the player has won
+            const totalShipCells = shipTypes.reduce((sum, ship) => sum + ship.size.rows * ship.size.cols, 0);
+            if (playerScore === totalShipCells) {
+                clearInterval(gameTimer);
+                messageDiv.textContent = 'You Win!';
+                fireButton.disabled = true; // Disable button after winning
+            }
+        } else if (board[row][col] === 0) {
+            board[row][col] = 3; // Mark cell as miss
+            messageDiv.textContent = 'Water!';
+        }
+        drawBoard();
+    }
+
+    // Start the game countdown
+    function startCountdown() {
+        let count = 5;
+        timerDiv.textContent = count;
+        let countdown = setInterval(() => {
+            count--;
             timerDiv.textContent = count;
-            let countdown = setInterval(() => {
-                count--;
-                timerDiv.textContent = count;
-                if (count === 0) {
-                    clearInterval(countdown);
-                    timerDiv.textContent = 'Start Naval Battle!';
-                    setTimeout(() => {
-                        gameStarted = true;
-                        startTimer();
-                        timerDiv.classList.add('timer');
-                        messageDiv.textContent = '';
-                    }, 1000);
+            if (count === 0) {
+                clearInterval(countdown);
+                timerDiv.textContent = 'Start Naval Battle!';
+                setTimeout(() => {
+                    gameStarted = true;
+                    startTimer();
+                    timerDiv.classList.add('timer'); // Add timer class for styling
+                    messageDiv.textContent = '';
+                }, 1000);
+            }
+        }, 1000);
+    }
+
+    // Start the game timer
+    function startTimer() {
+        gameTimer = setInterval(() => {
+            timeRemaining--;
+            timerDiv.textContent = `Time: ${timeRemaining}`;
+            if (timeRemaining === 0) {
+                clearInterval(gameTimer);
+                const totalShipCells = shipTypes.reduce((sum, ship) => sum + ship.size.rows * ship.size.cols, 0);
+                if (playerScore < totalShipCells) {
+                    messageDiv.textContent = 'Game Over!';
                 }
-            }, 1000);
-        }
+                fireButton.disabled = true;
+            }
+        }, 1000);
+    }
 
-        // Start the game timer
-        function startTimer() {
-            gameTimer = setInterval(() => {
-                timeRemaining--;
-                timerDiv.textContent = `Time: ${timeRemaining}`;
-                if (timeRemaining === 0) {
-                    clearInterval(gameTimer);
-                    const totalShipCells = shipTypes.reduce((sum, ship) => sum + ship.size.rows * ship.size.cols, 0);
-                    if (playerScore < totalShipCells) {
-                        messageDiv.textContent = 'Game Over!';
-                    }
-                    fireButton.disabled = true;
+    // Initialize the game
+    function initGame() {
+        initBoard();
+        ships = [];
+        playerScore = 0;
+        gameStarted = false;
+        clearInterval(gameTimer);
+        timeRemaining = 60; // Reset game timer
+        timerDiv.textContent = '';
+        messageDiv.textContent = '';
+        fireButton.disabled = false; // Re-enable fire button for new game
+
+        // Prevent only submarines scenario
+        let placedShips = 0;
+        let shipSize = shipTypes.reduce((sum, ship) => sum + ship.size.rows * ship.size.cols, 0);
+
+        // Ensure at least one ship larger than submarine is placed
+        let includeLargeShip = Math.random() < 0.5;
+        if (includeLargeShip) {
+            shipTypes.forEach(ship => {
+                if (ship.name !== 'Submarine') {
+                    placeShip(ship);
+                    placedShips += ship.size.rows * ship.size.cols;
                 }
-            }, 1000);
+            });
         }
 
-        // Initialize the game
-        function initGame() {
-            initBoard();
-            ships = [];
-            playerScore = 0;
-            gameStarted = false;
-            clearInterval(gameTimer);
-            timeRemaining = 60;
-            timerDiv.textContent = '';
-            messageDiv.textContent = '';
-            fireButton.disabled = false;
-
-            // Prevent only submarines scenario
-            let placedShips = 0;
-            let shipSize = shipTypes.reduce((sum, ship) => sum + ship.size.rows * ship.size.cols, 0);
-
-            // Ensure at least one ship larger than submarine is placed
-            let includeLargeShip = Math.random() < 0.5;
-            if (includeLargeShip) {
-                shipTypes.forEach(ship => {
-                    if (ship.name !== 'Submarine') {
-                        placeShip(ship);
-                        placedShips += ship.size.rows * ship.size.cols;
-                    }
-                });
-            }
-
-            // Place submarines if necessary
-            while (placedShips < shipSize) {
-                placeShip(shipTypes.find(ship => ship.name === 'Submarine'));
-                placedShips += 1;
-            }
-
-            drawBoard();
-            startCountdown();
+        // Place submarines if necessary
+        while (placedShips < shipSize) {
+            placeShip(shipTypes.find(ship => ship.name === 'Submarine'));
+            placedShips += 1;
         }
 
-        // Handle fire button click
-        fireButton.addEventListener('click', () => {
-            if (gameStarted) {
-                const row = parseInt(rowSelect.value) - 1;
-                const col = colSelect.value.charCodeAt(0) - 'A'.charCodeAt(0);
-                fireShot(row, col);
-            }
-        });
+        drawBoard();
+        startCountdown();
+    }
 
-        // Make the game responsive
-        window.addEventListener('resize', () => {
-            canvas.width = Math.min(window.innerWidth * 0.8, 600);
-            canvas.height = Math.min(window.innerHeight * 0.8, 350); // Adjust the height
-            cellSize = (canvas.width - 50 - 20) / boardSize.cols; // Adjust considering margins
-            drawBoard();
-        });
+    // Handle fire button click
+    fireButton.addEventListener('click', () => {
+        if (gameStarted) {
+            const row = parseInt(rowSelect.value) - 1;
+            const col = colSelect.value.charCodeAt(0) - 'A'.charCodeAt(0);
+            fireShot(row, col);
+        }
+    });
 
-        // Start the game
-        initGame();
+    // Make the game responsive
+    window.addEventListener('resize', () => {
+        canvas.width = Math.min(window.innerWidth * 0.8, 600); // Responsive width adjustment
+        canvas.height = Math.min(window.innerHeight * 0.8, 350); // Responsive height adjustment
+        cellSize = (canvas.width - 50 - 20) / boardSize.cols; // Recalculate cell size
+        drawBoard();
+    });
+
+    // Start the game
+    initGame();
   </script>
 </body>
 
