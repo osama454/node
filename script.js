@@ -1,26 +1,26 @@
-let container = document.getElementById("game-container");
+const container = document.getElementById("game-container");
 
 for (let i = 0; i < 9; i++) {
-  let createDiv = document.createElement("div");
+  const createDiv = document.createElement("div");
   createDiv.className = "hole";
   container.appendChild(createDiv);
-  let createMole = document.createElement("div");
+  const createMole = document.createElement("div");
   createMole.className = "mole";
   createDiv.appendChild(createMole);
 }
 
-let holes = document.querySelectorAll(".hole");
-let scoreEl = document.getElementById("score");
+const holes = document.querySelectorAll(".hole");
+const scoreEl = document.getElementById("score");
 let score = 0;
 
 function randomHole() {
-  let idx = Math.floor(Math.random() * holes.length);
+  const idx = Math.floor(Math.random() * holes.length);
   return holes[idx];
 }
 
 function peep() {
-  let hole = randomHole();
-  let mole = hole.querySelector(".mole");
+  const hole = randomHole();
+  const mole = hole.querySelector(".mole");
   mole.style.display = "block";
   setTimeout(() => (mole.style.display = "none"), 1000); // Hide after 1 second
 }
