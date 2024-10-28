@@ -1,14 +1,25 @@
-/* Basic styling, feel free to customize */
 body {
   font-family: sans-serif;
+}
+
+#gameArea {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+} /* Flexbox layout for player sections */
+
+.player {
+  border: 1px solid #ccc;
+  padding: 20px;
   text-align: center;
-}
+} /* Styling for each player section */
 
-#game-info {
+#timer {
+  font-size: 2em;
   margin-bottom: 20px;
-}
+} /* Timer styling */
 
-#message {
-  font-weight: bold;
-  margin-top: 10px;
-}
+#currentPlayer {
+  font-size: 1.5em;
+  margin-bottom: 20px;
+} /* Current player display styling */

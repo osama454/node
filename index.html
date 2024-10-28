@@ -1,186 +1,64 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Word Game</title>
-    <style>
-        body {
-            font-family: sans-serif;
-        }
-        #gameArea {
-            display: flex;
-            justify-content: space-around;
-            padding: 20px;
-        }
-        .player {
-            border: 1px solid #ccc;
-            padding: 20px;
-            text-align: center;
-        }
-        #timer {
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        #currentPlayer {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
+    <!-- Updated title for the game -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Word Game</h1>
+    <!-- Updated heading for the game -->
 
-<h1>Word Game</h1>
+    <div id="currentPlayer">Player 1's Turn</div>
+    <!-- Displays the current player’s turn -->
 
-<div id="currentPlayer">Player 1's Turn</div>
-
-<div id="gameArea">
-    <div class="player" id="player1">
+    <div id="gameArea">
+      <div class="player" id="player1">
         <h2>Player 1</h2>
+        <!-- Player 1's section header -->
         <div id="player1Score">Score: 0</div>
+        <!-- Player 1's score display -->
         <div id="player1Turns">Turns Left: 3</div>
+        <!-- Turns left for Player 1 -->
         <button onclick="startGame(1)">Generate Number</button>
+        <!-- Button to generate a random number -->
         <div id="player1Number"></div>
-        <input type="text" id="player1Word" placeholder="Enter word">
+        <!-- Display area for generated number -->
+        <input type="text" id="player1Word" placeholder="Enter word" />
+        <!-- Input field for Player 1's word -->
         <button onclick="checkWord(1)">Submit</button>
-        <div id="player1UsedLetters">Used Letters: </div>
+        <!-- Button to submit the entered word -->
+        <div id="player1UsedLetters">Used Letters:</div>
+        <!-- Displays letters used by Player 1 -->
         <div id="player1Result"></div>
-    </div>
+        <!-- Displays feedback for Player 1 -->
+      </div>
 
-    <div class="player" id="player2">
+      <div class="player" id="player2">
         <h2>Player 2</h2>
+        <!-- Player 2's section header -->
         <div id="player2Score">Score: 0</div>
+        <!-- Player 2's score display -->
         <div id="player2Turns">Turns Left: 3</div>
+        <!-- Turns left for Player 2 -->
         <button onclick="startGame(2)">Generate Number</button>
+        <!-- Button to generate a random number for Player 2 -->
         <div id="player2Number"></div>
-        <input type="text" id="player2Word" placeholder="Enter word">
+        <!-- Display area for generated number for Player 2 -->
+        <input type="text" id="player2Word" placeholder="Enter word" />
+        <!-- Input field for Player 2's word -->
         <button onclick="checkWord(2)">Submit</button>
-        <div id="player2UsedLetters">Used Letters: </div>
+        <!-- Button to submit the entered word for Player 2 -->
+        <div id="player2UsedLetters">Used Letters:</div>
+        <!-- Displays letters used by Player 2 -->
         <div id="player2Result"></div>
+        <!-- Displays feedback for Player 2 -->
+      </div>
     </div>
-</div>
 
-<div id="timer">10</div>
+    <div id="timer">10</div>
+    <!-- Timer display -->
 
-<script>
-let currentPlayer = 1;
-let player1Score = 0;
-let player2Score = 0;
-let player1TurnsLeft = 3;
-let player2TurnsLeft = 3;
-let timerInterval;
-let timeLeft = 10;
-let player1UsedLetters = [];
-let player2UsedLetters = [];
-
-function startGame(player) {
-    if ((player === 1 && player1TurnsLeft <= 0) || (player === 2 && player2TurnsLeft <= 0)) {
-        alert(`Player ${player} has no turns left.`);
-        return;
-    }
-
-    currentPlayer = player;
-    timeLeft = 10;
-    document.getElementById('timer').innerText = timeLeft;
-    clearInterval(timerInterval);
-    timerInterval = setInterval(updateTimer, 1000);
-
-    let randomNumber = Math.floor(Math.random() * 10) + 1;
-    document.getElementById(`player${player}Number`).innerText = randomNumber;
-
-    if (player === 1) {
-        player1TurnsLeft--;
-        document.getElementById('player1Turns').innerText = `Turns Left: ${player1TurnsLeft}`;
-    } else {
-        player2TurnsLeft--;
-        document.getElementById('player2Turns').innerText = `Turns Left: ${player2TurnsLeft}`;
-    }
-
-    document.getElementById('currentPlayer').innerText = `Player ${player}'s Turn`;
-}
-
-function updateTimer() {
-    timeLeft--;
-    document.getElementById('timer').innerText = timeLeft;
-    if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        alert(`Time's up! Player ${currentPlayer} loses this turn.`);
-        switchPlayer();
-    }
-}
-
-function checkWord(player) {
-    let word = document.getElementById(`player${player}Word`).value.toLowerCase();
-    let randomNumber = parseInt(document.getElementById(`player${player}Number`).innerText);
-    let usedLetters = player === 1 ? player1UsedLetters : player2UsedLetters;
-
-    if (usedLetters.includes(word[0]) || usedLetters.includes(word[word.length - 1])) {
-        alert('You cannot use a letter that has been used before.');
-        return;
-    }
-
-    if (
-        (randomNumber % 2 === 0 && word.length > 7) ||
-        (randomNumber % 2 !== 0 && word.length < 7)
-    ) {
-        if (
-            !usedLetters.includes(word[0]) &&
-            !usedLetters.includes(word[word.length - 1])
-        ) {
-            document.getElementById(`player${player}Result`).innerText = 'Correct!';
-            if (player === 1) {
-                player1Score++;
-                document.getElementById('player1Score').innerText = `Score: ${player1Score}`;
-            } else {
-                player2Score++;
-                document.getElementById('player2Score').innerText = `Score: ${player2Score}`;
-            }
-            usedLetters.push(word[0], word[word.length - 1]);
-            document.getElementById(`player${player}UsedLetters`).innerText = `Used Letters: ${usedLetters.join(', ')}`;
-        } else {
-            document.getElementById(`player${player}Result`).innerText = 'Incorrect!';
-        }
-    } else {
-        document.getElementById(`player${player}Result`).innerText = 'Incorrect!';
-    }
-
-    switchPlayer();
-}
-
-function switchPlayer() {
-    document.getElementById(`player${currentPlayer}Word`).value = '';
-    document.getElementById(`player${currentPlayer}Number`).innerText = '';
-    document.getElementById(`player${currentPlayer}Result`).innerText = '';
-
-    if (player1TurnsLeft <= 0 && player2TurnsLeft <= 0) {
-        clearInterval(timerInterval);
-        determineWinner();
-        return;
-    }
-
-    if (currentPlayer === 1 && player1TurnsLeft > 0) {
-        if (player2TurnsLeft > 0) {
-            startGame(1);
-        } else {
-            currentPlayer = 2;
-            startGame(2);
-        }
-    } else if (currentPlayer === 2 && player2TurnsLeft > 0) {
-        startGame(2);
-    } else {
-        currentPlayer = 1;
-        startGame(1);
-    }
-}
-
-function determineWinner() {
-    if (player1Score > player2Score) {
-        alert(`Player 1 wins with a score of ${player1Score}!`);
-    } else if (player2Score > player1Score) {
-        alert(`Player 2 wins with a score of ${player2Score}!`);
-    } else {
-        alert(`It's a tie with both players scoring ${player1Score}!`);
-    }
-}
-</script>
-
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>

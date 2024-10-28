@@ -169,7 +169,7 @@ describe("Scenario: Player 2 follows word length rules", () => {
     const generatedNumber = parseInt(player2Number.textContent, 10);
 
     if (generatedNumber % 2 === 0) {
-      player2WordInput.value = "small"; // Too short for even number
+      player2WordInput.value = "!small!"; // Too short for even number
       player2SubmitButton.click();
       expect(player2Result.textContent).toBe("Incorrect!");
     } else {
