@@ -1,0 +1,25 @@
+#game-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3x3 grid */
+    gap: 10px;
+  }
+  
+  .hole {
+    width: 100px;
+    height: 100px;
+    background-color: brown;
+    border-radius: 50%;
+    position: relative;
+  }
+  
+  .mole {
+    width: 80%;
+    height: 80%;
+    background-color: gray;
+    border-radius: 50%;
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    display: none; /* Initially hidden */
+  }
+  
