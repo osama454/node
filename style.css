@@ -1,0 +1,59 @@
+body {
+  font-family: Arial, sans-serif;
+  display: flex; /* Center carousel container */
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background: #f0f0f0; /* Set background color */
+}
+
+.carousel-container {
+  width: 80%; /* Set width of carousel container */
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel {
+  display: flex;
+  flex-direction: column; /* Stack carousel rows vertically */
+  gap: 10px; /* Reduce gap between rows */
+}
+
+.carousel-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.carousel-row img {
+  width: 100px; /* Set image width */
+  height: auto;
+  margin-right: 20px; /* Space between images */
+}
+
+@keyframes scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%); /* Scroll left to hide images */
+  }
+}
+
+@keyframes scroll-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%); /* Scroll right to hide images */
+  }
+}
+
+.scroll-left {
+  animation: scroll-left linear 20s infinite; /* Apply left scroll animation */
+}
+
+.scroll-right {
+  animation: scroll-right linear 20s infinite; /* Apply right scroll animation */
+}

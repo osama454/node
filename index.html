@@ -1,4 +1,38 @@
-<script src="script.js"></script>
-
-<button id="button" onclick="incr()">click</button>
-<div id="out">0</div>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carousel</title>
+    <link rel="stylesheet" href="style.css" /> <!-- Link to external stylesheet -->
+  </head>
+  <body>
+    <div class="carousel-container">
+      <div class="carousel">
+        <div class="carousel-row scroll-left" id="row1"> <!-- Class and ID to apply left scroll animation -->
+          <img src="resources/knight.png" alt="Logo 1" /> <!-- Updated image source and alt text -->
+          <img src="resources/knight.png" alt="Logo 2" />
+          <img src="resources/knight.png" alt="Logo 3" />
+          <img src="resources/knight.png" alt="Logo 4" />
+          <img src="resources/knight.png" alt="Logo 5" />
+          <img src="resources/knight.png" alt="Logo 6" />
+          <img src="resources/knight.png" alt="Logo 7" />
+          <img src="resources/knight.png" alt="Logo 8" />
+          <img src="resources/knight.png" alt="Logo 9" />
+        </div>
+        <div class="carousel-row scroll-right" id="row2"> <!-- Class and ID to apply right scroll animation -->
+          <img src="resources/knight.png" alt="Logo 10" /> <!-- Updated image source and alt text -->
+          <img src="resources/knight.png" alt="Logo 11" />
+          <img src="resources/knight.png" alt="Logo 12" />
+          <img src="resources/knight.png" alt="Logo 13" />
+          <img src="resources/knight.png" alt="Logo 14" />
+          <img src="resources/knight.png" alt="Logo 15" />
+          <img src="resources/knight.png" alt="Logo 16" />
+          <img src="resources/knight.png" alt="Logo 17" />
+          <img src="resources/knight.png" alt="Logo 18" />
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script> <!-- Link to external JavaScript file -->
+  </body>
+</html>
