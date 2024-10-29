@@ -1,0 +1,34 @@
+.road {
+  width: 400px;
+  height: 100px;
+  background-color: black;
+  overflow: hidden; /* Hide overflowing lines */
+  position: relative; /* Position lines relative to road */
+}
+
+.road::before { /* Create moving dashed lines */
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 200%;
+  height: 20px;
+  background-image: repeating-linear-gradient(90deg, white 0 100px, transparent 100px 200px);
+  animation: slide 3s linear infinite; /* Animation settings */
+  transform: translateY(-50%); /* Center vertically */
+}
+
+.car {
+  width: 20px;
+  height: 20px;
+  background-color: red;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center on road */
+}
+
+@keyframes slide {
+  0% { left: 0; } /* Start at the left */
+  100% { left: -200px; } /* Move left by the width of one full dash and gap */
+}
