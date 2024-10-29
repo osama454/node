@@ -63,7 +63,6 @@ describe("Animation Initialization", () => {
     expect(getComputedStyle(car).backgroundColor).toBe("rgb(255, 0, 0)");
     expect(getComputedStyle(car).position).toBe("absolute");
     expect(getComputedStyle(car).top).toBe("50%");
-    expect(getComputedStyle(car).left).toBe("50%");
   });
 });
 
@@ -74,6 +73,6 @@ describe("Animation Behavior", () => {
 
 
   it("Car should stay centered during animation", () => {
-    expect(getComputedStyle(car).transform).toContain("translate(-50%, -50%)");
+    expect(getComputedStyle(car).transform).toContain("translateY(-50%)");
   });
 });

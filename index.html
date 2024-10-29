@@ -1,15 +1,64 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>Car Animation</title>
-  <link rel="stylesheet" href="style.css">
+<style>
+body {
+  background-color: lightgray;
+}
+
+.road {
+  width: 400px;
+  height: 100px;
+  background-color: black;
+  position: relative;
+  overflow: hidden;
+  margin: 50px auto;
+}
+
+.dash {
+  width: 100px;
+  height: 20px;
+  background-color: white;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.car {
+  width: 20px;
+  height: 20px;
+  background-color: red;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  animation: drive 5s linear infinite;
+}
+
+@keyframes drive {
+  from {
+    left: -20px; /* Start slightly off-screen */
+  }
+  to {
+    left: 420px; /* End slightly off-screen */
+  }
+}
+
+/* Positioning the dashes */
+.dash:nth-child(1) { left: 0; }
+.dash:nth-child(2) { left: 150px; }
+.dash:nth-child(3) { left: 300px; }
+
+</style>
 </head>
-
 <body>
-  <div class="road">
-    <div class="car"></div>
-  </div>
-</body>
 
+<div class="road">
+  <div class="dash"></div>
+  <div class="dash"></div>
+  <div class="dash"></div>
+  <div class="car"></div>
+</div>
+
+</body>
 </html>
