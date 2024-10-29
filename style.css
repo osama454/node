@@ -1,0 +1,81 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+.product-container {
+  display: flex;
+  flex-direction: column; /* Stack images vertically on mobile */
+}
+
+.product {
+  height: 100vh; /* Full screen height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px; /* Slight border radius */
+  position: relative; /* For positioning product info */
+}
+
+.product-info {
+  font-size: 24px;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.promo-ad {
+  position: fixed;
+  bottom: 20px;
+  right: -100px; /* Always visible */
+  background-color: #f0f0f0;
+  border: 1px solid #222;
+  padding: 20px;
+  border-radius: 10px;
+  transition: all 0.3s ease; /* Smooth transition for all properties */
+  width: 200px; /* Initial width */
+  height: 60px; /* Initial height */
+  overflow: hidden; /* Hide overflowing content */
+}
+
+.promo-ad:hover {
+  right: 20px;
+  width: 250px; /* Extend width on hover */
+  height: 100px; /* Extend height on hover */
+}
+
+.signup-btn { 
+  opacity: 0; /* Hidden by default */
+  transition: all 0.3s ease; /* Smooth transition for all properties */
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px; /* Add some space above the button */
+}
+
+.promo-ad:hover .signup-btn {
+  display: block; /* Show on hover */
+  opacity: 1; /* Fade in */
+  transition: all 0.3s ease; /* Smooth transition for all properties */
+}
+
+.reviews-section {
+  padding: 20px;
+}
+
+.reviews-container {
+  display: flex;
+  overflow-x: auto; /* Horizontal scrolling */
+}
+
+.review {
+  min-width: 250px;
+  margin-right: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
