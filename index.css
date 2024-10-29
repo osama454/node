@@ -1,0 +1,41 @@
+#chessboard { /* Uses ID selector for styling the chessboard */
+  border-collapse: collapse;
+  width: 400px; /* Board width */
+}
+
+.square {
+  width: 50px; /* Cell width */
+  height: 50px; /* Cell height */
+}
+
+.light {
+  background-color: #eee; /* Light square color */
+}
+
+.dark {
+  background-color: #666; /* Dark square color */
+}
+
+.piece {
+  width: 100%; /* Fills cell width */
+  height: 100%; /* Fills cell height */
+  background-size: contain; /* Ensures image scaling */
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* White Pieces (Red) */
+.white.pawn { background-image: url('https://images.vexels.com/content/255144/preview/pawn-chess-piece-realistic-silhouette-212bd4.png'); filter: invert(22%) sepia(96%) saturate(6451%) hue-rotate(0deg) brightness(102%) contrast(106%); /* Red filter for white pawn */ }
+.white.rook { background-image: url('https://e7.pngegg.com/pngimages/317/596/png-clipart-chess-piece-rook-white-and-black-in-chess-pawn-hintergrund-angle-king-thumbnail.png'); filter: invert(22%) sepia(96%) saturate(6451%) hue-rotate(0deg) brightness(102%) contrast(106%); /* Red filter for white rook */ }
+.white.knight { background-image: url('https://static.thenounproject.com/png/589743-200.png'); filter: invert(22%) sepia(96%) saturate(6451%) hue-rotate(0deg) brightness(102%) contrast(106%); /* Red filter for white knight */ }
+.white.bishop { background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYtqWmHBhbo_rKLCdqS1CO_3s2dLzZ1pWc0Q&s'); filter: invert(22%) sepia(96%) saturate(6451%) hue-rotate(0deg) brightness(102%) contrast(106%); /* Red filter for white bishop */ }
+.white.queen { background-image: url('https://images.vexels.com/media/users/3/254462/isolated/preview/075b3100edf37f39ea08256ef2cad328-queen-chess-piece-black-color-stroke.png'); filter: invert(22%) sepia(96%) saturate(6451%) hue-rotate(0deg) brightness(102%) contrast(106%); /* Red filter for white queen */ }
+.white.king { background-image: url('https://w7.pngwing.com/pngs/684/51/png-transparent-chess-piece-queen-king-bishop-chess-king-pin-queen.png'); filter: invert(22%) sepia(96%) saturate(6451%) hue-rotate(0deg) brightness(102%) contrast(106%); /* Red filter for white king */ }
+
+/* Black Pieces (Black) */
+.black.pawn { background-image: url('https://images.vexels.com/content/255144/preview/pawn-chess-piece-realistic-silhouette-212bd4.png'); /* Image URL for black pawn */ }
+.black.rook { background-image: url('https://e7.pngegg.com/pngimages/317/596/png-clipart-chess-piece-rook-white-and-black-in-chess-pawn-hintergrund-angle-king-thumbnail.png'); /* Image URL for black rook */ }
+.black.knight { background-image: url('https://static.thenounproject.com/png/589743-200.png'); /* Image URL for black knight */ }
+.black.bishop { background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYtqWmHBhbo_rKLCdqS1CO_3s2dLzZ1pWc0Q&s'); /* Image URL for black bishop */ }
+.black.queen { background-image: url('https://images.vexels.com/media/users/3/254462/isolated/preview/075b3100edf37f39ea08256ef2cad328-queen-chess-piece-black-color-stroke.png'); /* Image URL for black queen */ }
+.black.king { background-image: url('https://w7.pngwing.com/pngs/684/51/png-transparent-chess-piece-queen-king-bishop-chess-king-pin-queen.png'); /* Image URL for black king */ }

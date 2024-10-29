@@ -1,4 +1,93 @@
-<script src="script.js"></script>
-
-<button id="button" onclick="incr()">click</button>
-<div id="out">0</div>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chessboard</title>
+  <link rel="stylesheet" href="index.css"> <!-- Links to the updated CSS file -->
+</head>
+<body>
+  <table id="chessboard"> <!-- Table ID updated for styling consistency -->
+    <tbody>
+      <tr>
+        <td class="square dark"><div class="piece black rook"></div></td> <!-- Defines a rook piece for black -->
+        <td class="square light"><div class="piece black knight"></div></td> <!-- Defines a knight piece for black -->
+        <td class="square dark"><div class="piece black bishop"></div></td> <!-- Defines a bishop piece for black -->
+        <td class="square light"><div class="piece black queen"></div></td> <!-- Defines a queen piece for black -->
+        <td class="square dark"><div class="piece black king"></div></td> <!-- Defines a king piece for black -->
+        <td class="square light"><div class="piece black bishop"></div></td>
+        <td class="square dark"><div class="piece black knight"></div></td>
+        <td class="square light"><div class="piece black rook"></div></td>
+      </tr>
+      <tr>
+        <td class="square light"><div class="piece black pawn"></div></td> <!-- Defines a pawn piece for black -->
+        <td class="square dark"><div class="piece black pawn"></div></td>
+        <td class="square light"><div class="piece black pawn"></div></td>
+        <td class="square dark"><div class="piece black pawn"></div></td>
+        <td class="square light"><div class="piece black pawn"></div></td>
+        <td class="square dark"><div class="piece black pawn"></div></td>
+        <td class="square light"><div class="piece black pawn"></div></td>
+        <td class="square dark"><div class="piece black pawn"></div></td>
+      </tr>
+      <tr>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+      </tr>
+      <tr>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+      </tr>
+      <tr>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+      </tr>
+      <tr>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+        <td class="square light"></td>
+        <td class="square dark"></td>
+      </tr>
+      <tr>
+        <td class="square dark"><div class="piece white pawn"></div></td> <!-- Defines a pawn piece for white -->
+        <td class="square light"><div class="piece white pawn"></div></td>
+        <td class="square dark"><div class="piece white pawn"></div></td>
+        <td class="square light"><div class="piece white pawn"></div></td>
+        <td class="square dark"><div class="piece white pawn"></div></td>
+        <td class="square light"><div class="piece white pawn"></div></td>
+        <td class="square dark"><div class="piece white pawn"></div></td>
+        <td class="square light"><div class="piece white pawn"></div></td>
+      </tr>
+      <tr>
+        <td class="square light"><div class="piece white rook"></div></td> <!-- Defines a rook piece for white -->
+        <td class="square dark"><div class="piece white knight"></div></td> <!-- Defines a knight piece for white -->
+        <td class="square light"><div class="piece white bishop"></div></td> <!-- Defines a bishop piece for white -->
+        <td class="square dark"><div class="piece white queen"></div></td> <!-- Defines a queen piece for white -->
+        <td class="square light"><div class="piece white king"></div></td> <!-- Defines a king piece for white -->
+        <td class="square dark"><div class="piece white bishop"></div></td>
+        <td class="square light"><div class="piece white knight"></div></td>
+        <td class="square dark"><div class="piece white rook"></div></td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>
