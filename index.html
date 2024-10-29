@@ -1,4 +1,77 @@
-<script src="script.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Bar Plot</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
 
-<button id="button" onclick="incr()">click</button>
-<div id="out">0</div>
+      .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        height: 300px;
+        width: 500px;
+        padding: 20px;
+        background: #f4f4f4;
+      }
+
+      .bar {
+        flex: 1;
+        margin: 0 10px;
+        background: #3498db;
+        transition: background 0.3s ease, height 0.3s ease;
+        position: relative;
+      }
+
+      .bar:hover {
+        background: #2980b9;
+      }
+
+      .bar::before {
+        content: attr(data-value) "%";
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .bar:hover::before {
+        opacity: 1;
+      }
+
+      .bar:nth-child(1) {
+        height: 50%;
+      }
+
+      .bar:nth-child(2) {
+        height: 80%;
+      }
+
+      .bar:nth-child(3) {
+        height: 30%;
+      }
+
+      .bar:nth-child(4) {
+        height: 90%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="bar-chart">
+      <div class="bar" data-value="50"></div>
+      <div class="bar" data-value="80"></div>
+      <div class="bar" data-value="30"></div>
+      <div class="bar" data-value="90"></div>
+    </div>
+  </body>
+</html>
