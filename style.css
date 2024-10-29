@@ -5,62 +5,61 @@ body {
 
 .product-container {
   display: flex;
-  flex-direction: column; /* Stack images vertically on mobile */
+  flex-direction: column; /* Aligns products vertically for mobile layout */
 }
 
 .product {
-  height: 100vh; /* Full screen height */
+  height: 100vh; /* Full viewport height for product display */
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px; /* Slight border radius */
-  position: relative; /* For positioning product info */
+  border-radius: 10px; /* Adds rounded corners to product sections */
+  position: relative; /* Positions product info within the product section */
 }
 
 .product-info {
-  font-size: 24px;
+  font-size: 24px; /* Sets font size for product information */
   color: white;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background for readability */
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 5px; /* Rounds the edges of the product info box */
 }
 
 .promo-ad {
   position: fixed;
   bottom: 20px;
-  right: -100px; /* Always visible */
-  background-color: #f0f0f0;
-  border: 1px solid #222;
+  right: -100px; /* Initial hidden position off-screen */
+  background-color: #f0f0f0; /* Light background for visibility */
+  border: 1px solid #222; /* Border to enhance promo visibility */
   padding: 20px;
-  border-radius: 10px;
-  transition: all 0.3s ease; /* Smooth transition for all properties */
-  width: 200px; /* Initial width */
-  height: 60px; /* Initial height */
-  overflow: hidden; /* Hide overflowing content */
+  border-radius: 10px; /* Rounded corners for promo box */
+  transition: all 0.3s ease; /* Smooth transition effect */
+  width: 200px; /* Initial width of the promo box */
+  height: 60px; /* Initial height of the promo box */
+  overflow: hidden; /* Hides content that overflows */
 }
 
 .promo-ad:hover {
   right: 20px;
-  width: 250px; /* Extend width on hover */
-  height: 100px; /* Extend height on hover */
+  width: 250px; /* Expands promo box width on hover */
+  height: 100px; /* Expands promo box height on hover */
 }
 
 .signup-btn { 
-  opacity: 0; /* Hidden by default */
-  transition: all 0.3s ease; /* Smooth transition for all properties */
-  background-color: #4CAF50;
+  opacity: 0; /* Initially hidden button */
+  transition: all 0.3s ease; /* Smooth transition effect */
+  background-color: #4CAF50; /* Background color for the button */
   color: white;
   padding: 10px 20px;
   border: none;
-  border-radius: 5px;
+  border-radius: 5px; /* Rounded corners for the button */
   cursor: pointer;
-  margin-top: 10px; /* Add some space above the button */
+  margin-top: 10px; /* Space above the button */
 }
 
 .promo-ad:hover .signup-btn {
-  display: block; /* Show on hover */
-  opacity: 1; /* Fade in */
-  transition: all 0.3s ease; /* Smooth transition for all properties */
+  display: block; /* Button becomes visible on hover */
+  opacity: 1; /* Fades in the button */
 }
 
 .reviews-section {
@@ -69,13 +68,13 @@ body {
 
 .reviews-container {
   display: flex;
-  overflow-x: auto; /* Horizontal scrolling */
+  overflow-x: auto; /* Allows horizontal scrolling for reviews */
 }
 
 .review {
-  min-width: 250px;
+  min-width: 250px; /* Minimum width for each review box */
   margin-right: 20px;
   padding: 15px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 5px; /* Rounded edges for review boxes */
 }
