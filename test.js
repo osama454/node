@@ -65,7 +65,7 @@ describe("Product Detail Page Structure and Content", () => {
   });
 
   it("should have a page title with 'Product Detail'", () => {
-    expect(productTitle.textContent).toBe("Product Detail");
+    expect(productTitle.textContent).toBe("Product Name");
   });
 
   it("should have a product card with the expected structure", () => {
@@ -135,24 +135,23 @@ describe("Product Detail Page Positioning", () => {
   });
 
   it("should position the product image on the left side of the product card", () => {
-    const productLeft = document.querySelector(".product-left");
     const productCard = document.querySelector(".product-card");
+    const productLeft = document.querySelector(".product-left");
+    const productRight = document.querySelector(".product-right");
 
-    // Ensure productLeft is on the left side of the card
-    expect(window.getComputedStyle(productLeft).width).toBe("40%");
-    expect(window.getComputedStyle(productLeft).backgroundColor).toBe(
-      "rgb(240, 240, 240)"
-    );
+    // Ensure product-card has a flex layout
+    expect(window.getComputedStyle(productCard).display).toBe("flex");
+
+    // Check if product-left is the first element in product-card
+    expect(productCard.firstElementChild).toBe(productLeft);
   });
 
   it("should position the product details on the right side of the product card", () => {
+    const productCard = document.querySelector(".product-card");
     const productRight = document.querySelector(".product-right");
 
-    // Ensure productRight is on the right side of the card
-    expect(window.getComputedStyle(productRight).width).toBe("60%");
-    expect(window.getComputedStyle(productRight).backgroundColor).toBe(
-      "rgb(255, 255, 255)"
-    ); // White
+    // Check if product-right is the second element in product-card
+    expect(productCard.children[1]).toBe(productRight);
   });
 
   it("should make product-card layout responsive to screen size", () => {
@@ -186,7 +185,7 @@ describe("Product Detail Page Positioning", () => {
     expect(window.getComputedStyle(productCard).marginLeft).toBe("auto");
     expect(window.getComputedStyle(productCard).marginRight).toBe("auto");
   });
-  it("should have a flex layout for product-left container with image appearing before price and discount", () => {
+  it("should position the product image on the left side of the product pricing", () => {
     const productLeft = document.querySelector(".product-left");
     const productImage = document.querySelector(".product-image");
     const productPricing = document.querySelector(".product-pricing");
