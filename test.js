@@ -49,6 +49,7 @@ describe("Group 2", () => {
     reset(done);
   });
   it("Test 1", () => {
-    expect(out.innerHTML).toBe("0");
+    window.incr()
+    expect(out.innerHTML).toBe("1");
   });
 });
