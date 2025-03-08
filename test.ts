@@ -1,4 +1,5 @@
 // test.ts
+// @ts-nocheck
 /// <reference types="jest" />
 
 const { JSDOM } = require("jsdom");
